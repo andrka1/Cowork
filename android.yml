@@ -1,0 +1,77 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - "feature/**"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+
+      - name: Make gradlew executable
+        run: chmod +x ./android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/lingua-mini.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingua-mini-apk
+          path: artifacts/lingua-mini.apk
+          if-no-files-found: error
+
+      - name: Publish APK to GitHub Release
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Lingua Mini — Android APK (latest)
+          body: |
+            Установочный APK приложения **Lingua Mini** (карточки, квизы, грамматика, времена, неправильные глаголы, исключения).
+
+            **Как установить:**
+            1. Скачай файл `lingua-mini.apk` ниже на телефон Android.
+            2. Открой его и разреши установку из неизвестных источников.
+            3. Готово!
+
+            Это debug-сборка для тестирования (не из Google Play). Собрана автоматически из ветки `feature/lingua-mini-app`.
+          files: artifacts/lingua-mini.apk
+          fail_on_unmatched_files: true
