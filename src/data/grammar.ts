@@ -110,6 +110,18 @@ export const tenses: TenseTopic[] = [
     ],
   },
   {
+    id: "past-perfect-continuous",
+    name: "Past Perfect Continuous",
+    nameRu: "Прошедшее совершённое длительное",
+    formula: "had been + V-ing",
+    usage: "Действие длилось до другого действия в прошлом (акцент на длительности).",
+    markers: "for, since, before, until, how long",
+    examples: [
+      { en: "I had been waiting for two hours before the bus came.", ru: "Я ждал два часа, прежде чем пришёл автобус." },
+      { en: "She had been working there since 2010.", ru: "Она работала там с 2010 года." },
+    ],
+  },
+  {
     id: "future-simple",
     name: "Future Simple (will)",
     nameRu: "Будущее простое",
@@ -145,6 +157,18 @@ export const tenses: TenseTopic[] = [
       { en: "She will be working at 9 am.", ru: "В 9 утра она будет работать." },
     ],
   },
+  {
+    id: "future-perfect",
+    name: "Future Perfect",
+    nameRu: "Будущее совершённое",
+    formula: "will have + V3 (past participle)",
+    usage: "Действие, которое завершится к определённому моменту в будущем.",
+    markers: "by, by the time, before, until, next year",
+    examples: [
+      { en: "I will have finished the report by 5 pm.", ru: "Я закончу отчёт к 5 вечера." },
+      { en: "By next year she will have graduated.", ru: "К следующему году она закончит университет." },
+    ],
+  },
 ];
 
 export const grammarExercises: GrammarExercise[] = [
@@ -173,6 +197,9 @@ export const grammarExercises: GrammarExercise[] = [
   // Past Perfect
   { id: 17, tenseId: "past-perfect", sentence: "The film ___ before we arrived.", hint: "start", options: ["started", "had started", "starts", "was starting"], answer: 1, explanation: "Раньше другого прошлого действия → had + V3." },
   { id: 18, tenseId: "past-perfect", sentence: "By 10 pm she ___ already ___ asleep.", hint: "fall", options: ["had / fallen", "has / fallen", "was / falling", "did / fall"], answer: 0, explanation: "By + время в прошлом → Past Perfect: had fallen." },
+  // Past Perfect Continuous
+  { id: 31, tenseId: "past-perfect-continuous", sentence: "I ___ for two hours before the bus came.", hint: "wait", options: ["waited", "had been waiting", "was waiting", "have waited"], answer: 1, explanation: "Длительность до другого прошлого действия → had been + V-ing." },
+  { id: 32, tenseId: "past-perfect-continuous", sentence: "She ___ there since 2010 before she moved.", hint: "work", options: ["worked", "had been working", "was working", "has worked"], answer: 1, explanation: "since + до другого прошлого → Past Perfect Continuous." },
   // Future Simple
   { id: 19, tenseId: "future-simple", sentence: "I think it ___ snow tomorrow.", hint: "will?", options: ["will", "is going to", "going to", "shall"], answer: 0, explanation: "Прогноз с I think → will." },
   { id: 20, tenseId: "future-simple", sentence: "Don't worry, I ___ help you.", hint: "promise", options: ["am helping", "will", "helped", "help"], answer: 1, explanation: "Спонтанное обещание → will help." },
@@ -181,6 +208,9 @@ export const grammarExercises: GrammarExercise[] = [
   { id: 22, tenseId: "future-going-to", sentence: "Look at the sky! It ___ rain.", hint: "evidence", options: ["will", "is going to", "rains", "rained"], answer: 1, explanation: "Предсказание по очевидным признакам → is going to." },
   // Future Continuous
   { id: 23, tenseId: "future-continuous", sentence: "At 9 am tomorrow I ___ an exam.", hint: "take", options: ["will take", "will be taking", "take", "am taking"], answer: 1, explanation: "Действие в процессе в момент будущего → will be + V-ing." },
+  // Future Perfect
+  { id: 33, tenseId: "future-perfect", sentence: "I ___ the report by 5 pm.", hint: "finish", options: ["will finish", "will have finished", "finish", "am finishing"], answer: 1, explanation: "by 5 pm = к моменту в будущем → will have + V3." },
+  { id: 34, tenseId: "future-perfect", sentence: "By next year she ___ university.", hint: "finish", options: ["will finish", "will have finished", "finishes", "is finishing"], answer: 1, explanation: "By next year → Future Perfect: will have finished." },
   // Mixed contrast
   { id: 24, tenseId: "present-perfect", sentence: "I ___ my keys. I can't find them now.", hint: "lose", options: ["lost", "have lost", "had lost", "lose"], answer: 1, explanation: "Результат важен сейчас → Present Perfect: have lost." },
   { id: 25, tenseId: "past-simple", sentence: "When ___ you ___ English?", hint: "start", options: ["have / started", "did / start", "do / start", "are / starting"], answer: 1, explanation: "Вопрос о конкретном моменте в прошлом → did + start." },
