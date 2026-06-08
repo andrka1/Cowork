@@ -1,0 +1,27 @@
+import { Category } from "./types";
+
+export const categories: Category[] = [
+  { id: "basics", name: "Основы", emoji: "📝", color: "from-blue-500 to-blue-600", description: "Базовые слова и фразы" },
+  { id: "travel", name: "Путешествия", emoji: "✈️", color: "from-emerald-500 to-emerald-600", description: "В поездке и транспорт" },
+  { id: "food", name: "Еда", emoji: "🍕", color: "from-orange-500 to-orange-600", description: "Еда, напитки, кухня" },
+  { id: "work", name: "Работа", emoji: "💼", color: "from-violet-500 to-violet-600", description: "Офис и карьера" },
+  { id: "emotions", name: "Эмоции", emoji: "😊", color: "from-pink-500 to-pink-600", description: "Чувства и характер" },
+  { id: "nature", name: "Природа", emoji: "🌿", color: "from-green-500 to-green-600", description: "Мир вокруг нас" },
+  { id: "tech", name: "Технологии", emoji: "💻", color: "from-cyan-500 to-cyan-600", description: "IT, гаджеты, интернет" },
+  { id: "home", name: "Дом", emoji: "🏠", color: "from-amber-500 to-amber-600", description: "Быт, мебель, уют" },
+  { id: "body", name: "Тело", emoji: "🏃", color: "from-red-500 to-red-600", description: "Тело и здоровье" },
+  { id: "time", name: "Время", emoji: "⏰", color: "from-indigo-500 to-indigo-600", description: "Время и даты" },
+  { id: "shopping", name: "Покупки", emoji: "🛒", color: "from-fuchsia-500 to-fuchsia-600", description: "Магазин и деньги" },
+  { id: "education", name: "Учёба", emoji: "📚", color: "from-teal-500 to-teal-600", description: "Образование и наука" },
+  { id: "people", name: "Люди", emoji: "👥", color: "from-sky-500 to-sky-600", description: "Семья и отношения" },
+  { id: "city", name: "Город", emoji: "🏙️", color: "from-slate-500 to-slate-600", description: "Город и места" },
+  { id: "verbs", name: "Глаголы", emoji: "⚡", color: "from-yellow-500 to-yellow-600", description: "Важные действия" },
+  { id: "adjectives", name: "Прилагательные", emoji: "🎨", color: "from-rose-500 to-rose-600", description: "Описание и качества" },
+  { id: "music", name: "Музыка", emoji: "🎵", color: "from-purple-500 to-purple-600", description: "Слова из песен" },
+  { id: "phrasal", name: "Фразовые глаголы", emoji: "🔗", color: "from-lime-500 to-lime-600", description: "Give up, hold on..." },
+  { id: "slang", name: "Сленг", emoji: "🔥", color: "from-red-400 to-orange-500", description: "Разговорный английский" },
+  { id: "advanced", name: "Сложные слова", emoji: "🧠", color: "from-red-500 to-red-600", description: "Уровень C1–C2" },
+  { id: "ielts", name: "IELTS Band 7+", emoji: "🏆", color: "from-yellow-500 to-amber-600", description: "Сильная лексика" },
+  { id: "idioms", name: "Идиомы", emoji: "🗯️", color: "from-purple-500 to-fuchsia-600", description: "С объяснениями" },
+  { id: "movies", name: "Из фильмов", emoji: "🎬", color: "from-zinc-500 to-zinc-600", description: "Фразы из кино" },
+];
