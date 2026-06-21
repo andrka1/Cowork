@@ -9,10 +9,15 @@ import {
   speak,
 } from "../data/storage";
 
+const STORAGE_KEY = "lingua_mini_progress";
+
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(getSettings());
   const [goal, setGoal] = useState(getProgress().dailyGoal);
+  const [exportText, setExportText] = useState<string | null>(null);
+  const [importText, setImportText] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const update = (partial: Partial<typeof settings>) => {
     const next = saveSettings(partial);
@@ -41,6 +46,34 @@ export default function SettingsPage() {
     }
   };
 
+  const handleExport = () => {
+    setExportText(localStorage.getItem(STORAGE_KEY) || JSON.stringify(getProgress()));
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(exportText || "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // буфер недоступен — пользователь выделит текст вручную
+    }
+  };
+
+  const handleImport = () => {
+    const text = importText.trim();
+    if (!text) return;
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== "object") throw new Error("bad");
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      window.alert("Прогресс восстановлен!");
+      navigate("/");
+    } catch {
+      window.alert("Неверный формат резервной копии.");
+    }
+  };
+
   return (
     <div className="px-5 pt-8 pb-4 animate-fade-in">
       <div className="flex items-center gap-3 mb-6">
@@ -59,7 +92,6 @@ export default function SettingsPage() {
           🔊 Озвучка
         </h2>
 
-        {/* Accent */}
         <label className="text-xs text-slate-400 mb-2 block">Акцент</label>
         <div className="flex gap-2 mb-4">
           {accents.map((a) => (
@@ -80,7 +112,6 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Speed */}
         <label className="text-xs text-slate-400 mb-2 block">Скорость речи</label>
         <div className="flex gap-2 mb-4">
           {speeds.map((s) => (
@@ -101,7 +132,6 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Auto-speak */}
         <button
           onClick={() => update({ autoSpeak: !settings.autoSpeak })}
           className="w-full flex items-center justify-between p-4 rounded-xl bg-slate-800 border border-slate-700/50"
@@ -155,6 +185,52 @@ export default function SettingsPage() {
           ))}
         </div>
         <p className="text-xs text-slate-500 mt-2">Сколько слов учить в день</p>
+      </div>
+
+      {/* Backup */}
+      <div className="mb-6">
+        <h2 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+          💾 Резервная копия
+        </h2>
+        <p className="text-xs text-slate-500 mb-3">
+          Сохрани прогресс в текст и восстанови его на другом устройстве или после переустановки.
+        </p>
+        <button
+          onClick={handleExport}
+          className="w-full py-3 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-300 text-sm font-medium active:scale-[0.98] transition-all"
+        >
+          Создать резервную копию
+        </button>
+        {exportText && (
+          <div className="mt-3">
+            <textarea
+              readOnly
+              value={exportText}
+              onFocus={(e) => e.target.select()}
+              className="w-full h-24 p-3 rounded-xl bg-slate-800 border border-slate-700/50 text-slate-300 text-xs font-mono resize-none"
+            />
+            <button
+              onClick={handleCopy}
+              className="w-full mt-2 py-2.5 rounded-xl bg-slate-800 border border-slate-700/50 text-slate-300 text-sm font-medium active:scale-[0.98] transition-all"
+            >
+              {copied ? "Скопировано ✓" : "Копировать"}
+            </button>
+          </div>
+        )}
+        <label className="text-xs text-slate-400 mt-4 mb-2 block">Восстановить из копии</label>
+        <textarea
+          value={importText}
+          onChange={(e) => setImportText(e.target.value)}
+          placeholder="Вставь сюда сохранённый текст…"
+          className="w-full h-24 p-3 rounded-xl bg-slate-800 border border-slate-700/50 text-slate-200 text-xs font-mono resize-none mb-2"
+        />
+        <button
+          onClick={handleImport}
+          disabled={!importText.trim()}
+          className="w-full py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-sm font-medium active:scale-[0.98] transition-all disabled:opacity-40"
+        >
+          Восстановить прогресс
+        </button>
       </div>
 
       {/* Danger zone */}

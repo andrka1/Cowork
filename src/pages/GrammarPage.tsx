@@ -7,6 +7,7 @@ export default function GrammarPage() {
   const navigate = useNavigate();
   const progress = getProgress();
   const grammarDone = progress.grammarResults.length;
+  const sentenceCount = tenses.reduce((a, t) => a + t.examples.length, 0);
 
   const cards = [
     {
@@ -15,6 +16,20 @@ export default function GrammarPage() {
       title: "Времена",
       subtitle: `${tenses.length} времён · ${grammarExercises.length} упражнений`,
       color: "from-blue-500 to-indigo-600",
+    },
+    {
+      to: "/grammar/verb-forms",
+      emoji: "✍️",
+      title: "Формы глаголов",
+      subtitle: `${irregularVerbs.length} глаголов · впиши V2 и V3`,
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
+      to: "/grammar/builder",
+      emoji: "🧱",
+      title: "Конструктор предложений",
+      subtitle: `${sentenceCount} предложений · порядок слов`,
+      color: "from-pink-500 to-rose-600",
     },
     {
       to: "/grammar/irregulars",
@@ -36,7 +51,7 @@ export default function GrammarPage() {
     <div className="px-5 pt-8 pb-4 animate-fade-in">
       <h1 className="text-2xl font-display font-bold text-white mb-2">Грамматика</h1>
       <p className="text-slate-400 text-sm mb-6">
-        Времена и исключения для уровня B2 / IELTS 5.5+
+        Правила, формы глаголов и построение предложений
       </p>
 
       <div className="flex flex-col gap-3">
