@@ -117,13 +117,11 @@ export default function QuizPage() {
     setQuizWords(remaining);
     if (currentQuestion >= remaining.length) {
       if (remaining.length === 0 && answered === 0) {
-        // Nothing answered — just go back to setup
         setState("setup");
       } else {
         finish(score, answered);
       }
     }
-    // else: same index now points to the next word
   };
 
   const totalAnswered = answered;
@@ -140,9 +138,9 @@ export default function QuizPage() {
           <label className="text-sm font-medium text-slate-300 mb-3 block">Режим</label>
           <div className="flex gap-2">
             {([
-              { key: "new" as QuizMode, label: "Новые", emoji: "\uD83C\uDD95" },
-              { key: "errors" as QuizMode, label: "Ошибки", emoji: "\u274C" },
-              { key: "all" as QuizMode, label: "Все", emoji: "\uD83D\uDCD6" },
+              { key: "new" as QuizMode, label: "Новые", emoji: "🆕" },
+              { key: "errors" as QuizMode, label: "Ошибки", emoji: "❌" },
+              { key: "all" as QuizMode, label: "Все", emoji: "📖" },
             ]).map(({ key, label, emoji }) => {
               const count = modeCounts[key];
               const disabled = count === 0;
@@ -171,7 +169,7 @@ export default function QuizPage() {
           className="w-full mb-5 flex items-center justify-between p-4 rounded-xl bg-slate-800 border border-slate-700/50"
         >
           <div className="text-left">
-            <p className="text-sm font-medium text-white">\uD83C\uDFA7 Аудирование</p>
+            <p className="text-sm font-medium text-white">🎧 Аудирование</p>
             <p className="text-xs text-slate-400 mt-0.5">Слушай слово и выбирай перевод (IELTS Listening)</p>
           </div>
           <span
@@ -190,3 +188,108 @@ export default function QuizPage() {
         {/* Category */}
         <div className="mb-5">
           <label className="text-sm font-medium text-slate-300 mb-3 block">Категория</label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedCategory("all")}
+              className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                selectedCategory === "all"
+                  ? "bg-brand-500 text-white"
+                  : "bg-slate-800 text-slate-400 border border-slate-700/50"
+              }`}
+            >
+              🌐 Все
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                  selectedCategory === cat.id
+                    ? "bg-brand-500 text-white"
+                    : "bg-slate-800 text-slate-400 border border-slate-700/50"
+                }`}
+              >
+                {cat.emoji} {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Question count */}
+        <div className="mb-8">
+          <label className="text-sm font-medium text-slate-300 mb-3 block">Количество вопросов</label>
+          <div className="flex gap-2">
+            {[5, 10, 15, 20].map((count) => (
+              <button
+                key={count}
+                onClick={() => setQuestionCount(count)}
+                className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${
+                  questionCount === count
+                    ? "bg-brand-500 text-white"
+                    : "bg-slate-800 text-slate-400 border border-slate-700/50"
+                }`}
+              >
+                {count}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={startQuiz}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-400 text-white font-semibold text-base active:scale-[0.98] transition-all"
+        >
+          Начать квиз
+        </button>
+      </div>
+    );
+  }
+
+  if (state === "playing") {
+    const current = quizWords[currentQuestion];
+    if (!current) {
+      return (
+        <div className="px-5 pt-8 pb-4 text-center text-slate-400">
+          Нет слов для квиза
+        </div>
+      );
+    }
+    return (
+      <div className="px-5 pt-8 pb-4">
+        <QuizCard
+          key={current.id}
+          word={current}
+          onAnswer={handleAnswer}
+          onExclude={handleExclude}
+          questionNum={currentQuestion + 1}
+          totalQuestions={quizWords.length}
+          listening={listening}
+        />
+      </div>
+    );
+  }
+
+  // results
+  return (
+    <div className="px-5 pt-8 pb-4 animate-fade-in flex flex-col items-center">
+      <h1 className="text-2xl font-display font-bold text-white mb-6">Результаты</h1>
+      <div className="w-40 h-40 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 flex flex-col items-center justify-center mb-6">
+        <span className="text-4xl font-display font-bold text-white">{scorePercent}%</span>
+        <span className="text-sm text-slate-400 mt-1">{score} / {totalAnswered}</span>
+      </div>
+      <p className="text-slate-400 text-sm mb-8 text-center">
+        {scorePercent >= 80
+          ? "Отлично! 🎉"
+          : scorePercent >= 50
+          ? "Хороший результат! 👍"
+          : "Продолжай тренироваться! 💪"}
+      </p>
+      <button
+        onClick={() => setState("setup")}
+        className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-400 text-white font-semibold text-base active:scale-[0.98] transition-all"
+      >
+        Ещё раз
+      </button>
+    </div>
+  );
+}
