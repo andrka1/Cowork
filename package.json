@@ -6,6 +6,7 @@
   "description": "Lingua Mini — minimalist mobile PWA for learning English",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/gen-audio.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host"
   },

@@ -1,4 +1,4 @@
-// Unified progress tracking: spaced repetition + word of day + TTS (v6)
+// Unified progress tracking: spaced repetition + word of day + TTS (v8)
 // merged with word exclusion + grammar results + app settings (accent / speed / auto-speak)
 import { Capacitor } from "@capacitor/core";
 
@@ -282,16 +282,12 @@ export function setDailyGoal(goal: number): void {
 }
 
 // ===================== Text-to-Speech pronunciation =====================
-// IMPORTANT: inside the Android WebView (the packaged APK) the Web Speech API
-// (window.speechSynthesis) is effectively unavailable — getVoices() is empty and
-// speak() produces no audio. That is why nothing was heard in the app.
-//
-// Strategy:
-//   • On a native platform (Capacitor / APK): stream the pronunciation as an
-//     MP3 from Google Translate TTS and play it through a normal <audio> element.
-//     The WebView media stack plays this reliably, no native plugin required.
-//   • On the web (real browser): use the built-in speechSynthesis, which works
-//     offline and well there, and fall back to the audio stream if needed.
+// How audio works (3 layers, tried in order):
+//   1) BUNDLED offline MP3 shipped inside the app at /audio/<slug>.mp3
+//      (generated at build time by scripts/gen-audio.mjs). Works with NO internet.
+//      This is the reason the APK grows in size — the audio is really inside it.
+//   2) ONLINE stream (StreamElements / Google TTS) for anything not bundled.
+//   3) Browser speechSynthesis (web only — it is dead inside the Android WebView).
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let currentAudio: HTMLAudioElement | null = null;
@@ -325,31 +321,80 @@ function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
   return byQuality(exact) || byQuality(sameRegion) || byQuality(anyEnglish);
 }
 
-// Build a Google Translate TTS stream URL. tl only supports the base language
-// (e.g. "en"); ttsspeed slows playback down for the "slow" speed setting.
-function googleTtsUrl(text: string, lang: string, rate: number): string {
-  const tl = (lang || "en-US").split("-")[0] || "en";
-  const speed = rate < 0.8 ? 0.3 : 1;
-  const q = encodeURIComponent(text.slice(0, 200));
-  const base = "https://translate.google.com/translate_tts";
-  return base + "?ie=UTF-8&client=tw-ob&tl=" + tl + "&ttsspeed=" + speed + "&q=" + q;
+// MUST stay identical to slugify() in scripts/gen-audio.mjs
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
-function speakViaAudio(text: string, lang: string, rate: number): Promise<void> {
+// Resolve the bundled audio file URL relative to the current document so it
+// works with Vite's base: "./" inside the Capacitor WebView.
+function localAudioUrl(text: string): string {
+  const slug = slugify(text);
+  if (!slug) return "";
+  try {
+    return new URL("audio/" + slug + ".mp3", window.location.href).href;
+  } catch {
+    return "audio/" + slug + ".mp3";
+  }
+}
+
+// Small on-screen toast so audio problems are visible on the phone (no console there).
+function toast(msg: string): void {
+  try {
+    if (typeof document === "undefined" || !document.body) return;
+    const d = document.createElement("div");
+    d.textContent = msg;
+    d.style.cssText =
+      "position:fixed;left:50%;bottom:90px;transform:translateX(-50%);" +
+      "background:rgba(20,20,20,0.92);color:#fff;padding:10px 16px;border-radius:10px;" +
+      "font-size:13px;line-height:1.3;z-index:99999;max-width:88%;text-align:center;" +
+      "box-shadow:0 4px 14px rgba(0,0,0,0.35)";
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 4500);
+  } catch {
+    // ignore
+  }
+}
+
+// Online TTS MP3 URLs to try, in order: StreamElements then Google Translate.
+function ttsUrls(text: string, lang: string, rate: number): string[] {
+  const q = encodeURIComponent(text.slice(0, 200));
+  const tl = (lang || "en-US").split("-")[0] || "en";
+  const speed = rate < 0.8 ? 0.3 : 1;
+  const seVoice = lang === "en-GB" ? "Brian" : "Joanna";
+  const seBase = "https://api.streamelements.com/kappa/v2/speech";
+  const gBase = "https://translate.google.com/translate_tts";
+  return [
+    seBase + "?voice=" + seVoice + "&text=" + q,
+    gBase + "?ie=UTF-8&client=tw-ob&tl=" + tl + "&ttsspeed=" + speed + "&q=" + q,
+  ];
+}
+
+function playUrl(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       if (currentAudio) {
         currentAudio.pause();
         currentAudio = null;
       }
-      const audio = new Audio(googleTtsUrl(text, lang, rate));
-      audio.crossOrigin = "anonymous";
+      const audio = new Audio(url);
       currentAudio = audio;
-      audio.onended = () => resolve();
-      audio.onerror = () => reject(new Error("tts audio error"));
+      let settled = false;
+      const done = (ok: boolean, err?: Error) => {
+        if (settled) return;
+        settled = true;
+        if (ok) resolve();
+        else reject(err || new Error("audio error"));
+      };
+      audio.onended = () => done(true);
+      audio.onerror = () => done(false, new Error("load/play error"));
       const p = audio.play();
       if (p && typeof (p as Promise<void>).catch === "function") {
-        (p as Promise<void>).catch(reject);
+        (p as Promise<void>).catch((e) => done(false, e as Error));
       }
     } catch (e) {
       reject(e as Error);
@@ -357,10 +402,25 @@ function speakViaAudio(text: string, lang: string, rate: number): Promise<void> 
   });
 }
 
+async function speakViaAudio(text: string, lang: string, rate: number): Promise<void> {
+  const urls = ttsUrls(text, lang, rate);
+  let lastErr: Error | undefined;
+  for (const url of urls) {
+    try {
+      await playUrl(url);
+      return;
+    } catch (e) {
+      lastErr = e as Error;
+    }
+  }
+  throw lastErr || new Error("all tts sources failed");
+}
+
 function speakViaWebSpeech(text: string, lang: string, rate: number): boolean {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
   const synth = window.speechSynthesis;
   if (!cachedVoices.length) loadVoices();
+  if (!cachedVoices.length) return false; // no voices => WebView, cannot speak
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
   utterance.rate = rate || 0.85;
@@ -383,18 +443,32 @@ export async function speak(text: string, langOverride?: string): Promise<void> 
   const lang = langOverride || settings.accent || "en-US";
   const rate = settings.rate || 0.85;
 
-  // Native (APK): Web Speech API doesn't work in the WebView, use the audio
-  // stream and only fall back to speechSynthesis if the stream fails.
+  // 1) Bundled offline audio first — works with no internet, plays in the WebView.
+  const local = localAudioUrl(text);
+  if (local) {
+    try {
+      await playUrl(local);
+      return;
+    } catch {
+      // not bundled (e.g. example sentences) — fall through to online/web speech
+    }
+  }
+
+  // 2) Native (APK): online stream, then speechSynthesis as a last resort.
   if (Capacitor.isNativePlatform()) {
     try {
       await speakViaAudio(text, lang, rate);
-    } catch {
-      speakViaWebSpeech(text, lang, rate);
+    } catch (e) {
+      const ok = speakViaWebSpeech(text, lang, rate);
+      if (!ok) {
+        const msg = e && (e as Error).message ? (e as Error).message : String(e);
+        toast("🔇 Звук не загрузился (" + msg + "). Нужен интернет для слов без офлайн-озвучки.");
+      }
     }
     return;
   }
 
-  // Web: prefer the built-in synthesizer, fall back to the audio stream.
+  // 3) Web: prefer the built-in synthesizer, fall back to the audio stream.
   if (!speakViaWebSpeech(text, lang, rate)) {
     speakViaAudio(text, lang, rate).catch(() => {});
   }
