@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Word, words } from "../data/words";
 import { speak, getExcludedIds } from "../data/storage";
 
@@ -8,11 +8,20 @@ interface Props {
   onExclude: () => void;
   questionNum: number;
   totalQuestions: number;
+  listening?: boolean;
 }
 
-export default function QuizCard({ word, onAnswer, onExclude, questionNum, totalQuestions }: Props) {
+export default function QuizCard({ word, onAnswer, onExclude, questionNum, totalQuestions, listening = false }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+
+  // In listening mode, play the word automatically when the question appears.
+  useEffect(() => {
+    if (listening) {
+      const t = setTimeout(() => speak(word.en), 300);
+      return () => clearTimeout(t);
+    }
+  }, [word.id, listening]);
 
   const options = useMemo(() => {
     const excluded = new Set(getExcludedIds());
@@ -87,6 +96,9 @@ export default function QuizCard({ word, onAnswer, onExclude, questionNum, total
       ? "bg-amber-500/20 text-amber-400"
       : "bg-red-500/20 text-red-400";
 
+  // Hide the written word while listening, until the answer is revealed.
+  const hideWord = listening && !showResult;
+
   return (
     <div className="flex flex-col items-center gap-5 w-full animate-slide-up">
       {/* Progress + level */}
@@ -119,23 +131,40 @@ export default function QuizCard({ word, onAnswer, onExclude, questionNum, total
         </button>
 
         <span className="text-xs uppercase tracking-widest text-slate-500 mb-3 block">
-          Переведи слово
+          {hideWord ? "\uD83C\uDFA7 Послушай и выбери перевод" : "Переведи слово"}
         </span>
-        <h2 className="text-3xl font-display font-bold text-white mb-2">{word.en}</h2>
-        <p className="text-sm text-slate-400 font-mono mb-3">{word.transcription}</p>
-        <button
-          onClick={handleSpeak}
-          className="mx-auto w-10 h-10 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:bg-brand-500/30 active:scale-90 transition-all"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-          </svg>
-        </button>
+
+        {hideWord ? (
+          <button
+            onClick={handleSpeak}
+            className="mx-auto w-20 h-20 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:bg-brand-500/30 active:scale-90 transition-all"
+          >
+            <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+          </button>
+        ) : (
+          <>
+            <h2 className="text-3xl font-display font-bold text-white mb-2">{word.en}</h2>
+            <p className="text-sm text-slate-400 font-mono mb-3">{word.transcription}</p>
+            <button
+              onClick={handleSpeak}
+              className="mx-auto w-10 h-10 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:bg-brand-500/30 active:scale-90 transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            </button>
+          </>
+        )}
+        {hideWord && (
+          <p className="text-xs text-slate-500 mt-3">Нажми, чтобы прослушать ещё раз</p>
+        )}
 
         {/* Show explanation after answering, if available */}
         {showResult && word.note && (
           <p className="mt-4 text-xs text-amber-200/90 bg-amber-400/10 border border-amber-300/20 rounded-xl p-2">
-            💡 {word.note}
+            \uD83D\uDCA1 {word.note}
           </p>
         )}
       </div>

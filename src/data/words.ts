@@ -10,6 +10,7 @@ import { bodyWords, timeWords, shoppingWords, educationWords, peopleWords, cityW
 import { verbsWords, adjectivesWords } from "./words-verbs-adj";
 import { musicWords, phrasalVerbWords, slangWords } from "./words-music";
 import { ieltsExtraWords } from "./words-ielts";
+import { ieltsAdvancedWords } from "./words-ielts-advanced";
 
 export type { Word, Category };
 export { categories };
@@ -35,4 +36,5 @@ export const words: Word[] = [
   ...phrasalVerbWords,
   ...slangWords,
   ...ieltsExtraWords,
+  ...ieltsAdvancedWords,
 ];

@@ -19,6 +19,7 @@ export default function QuizPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [questionCount, setQuestionCount] = useState(10);
   const [quizMode, setQuizMode] = useState<QuizMode>("new");
+  const [listening, setListening] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [quizWords, setQuizWords] = useState<typeof words>([]);
@@ -139,9 +140,9 @@ export default function QuizPage() {
           <label className="text-sm font-medium text-slate-300 mb-3 block">Режим</label>
           <div className="flex gap-2">
             {([
-              { key: "new" as QuizMode, label: "Новые", emoji: "🆕" },
-              { key: "errors" as QuizMode, label: "Ошибки", emoji: "❌" },
-              { key: "all" as QuizMode, label: "Все", emoji: "📖" },
+              { key: "new" as QuizMode, label: "Новые", emoji: "\uD83C\uDD95" },
+              { key: "errors" as QuizMode, label: "Ошибки", emoji: "\u274C" },
+              { key: "all" as QuizMode, label: "Все", emoji: "\uD83D\uDCD6" },
             ]).map(({ key, label, emoji }) => {
               const count = modeCounts[key];
               const disabled = count === 0;
@@ -164,119 +165,28 @@ export default function QuizPage() {
           </div>
         </div>
 
+        {/* Listening mode (IELTS) */}
+        <button
+          onClick={() => setListening((v) => !v)}
+          className="w-full mb-5 flex items-center justify-between p-4 rounded-xl bg-slate-800 border border-slate-700/50"
+        >
+          <div className="text-left">
+            <p className="text-sm font-medium text-white">\uD83C\uDFA7 Аудирование</p>
+            <p className="text-xs text-slate-400 mt-0.5">Слушай слово и выбирай перевод (IELTS Listening)</p>
+          </div>
+          <span
+            className={`relative w-12 h-7 rounded-full transition-all flex-shrink-0 ${
+              listening ? "bg-brand-500" : "bg-slate-600"
+            }`}
+          >
+            <span
+              className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${
+                listening ? "left-6" : "left-1"
+              }`}
+            />
+          </span>
+        </button>
+
         {/* Category */}
         <div className="mb-5">
           <label className="text-sm font-medium text-slate-300 mb-3 block">Категория</label>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setSelectedCategory("all")}
-              className={`p-3 rounded-xl text-center text-xs font-medium transition-all ${
-                selectedCategory === "all"
-                  ? "bg-brand-500 text-white"
-                  : "bg-slate-800 text-slate-400 border border-slate-700/50"
-              }`}
-            >
-              🌍 Все
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`p-3 rounded-xl text-center text-xs font-medium transition-all ${
-                  selectedCategory === cat.id
-                    ? "bg-brand-500 text-white"
-                    : "bg-slate-800 text-slate-400 border border-slate-700/50"
-                }`}
-              >
-                {cat.emoji} {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Question count */}
-        <div className="mb-8">
-          <label className="text-sm font-medium text-slate-300 mb-3 block">Вопросов</label>
-          <div className="flex gap-2">
-            {[5, 10, 15, 20].map((num) => (
-              <button
-                key={num}
-                onClick={() => setQuestionCount(num)}
-                className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${
-                  questionCount === num
-                    ? "bg-brand-500 text-white"
-                    : "bg-slate-800 text-slate-400 border border-slate-700/50"
-                }`}
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={startQuiz}
-          disabled={modeCounts[quizMode] === 0}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold text-lg transition-all active:scale-[0.98] shadow-soft disabled:opacity-40"
-        >
-          Начать квиз
-        </button>
-      </div>
-    );
-  }
-
-  if (state === "playing" && quizWords[currentQuestion]) {
-    return (
-      <div className="px-5 pt-8 pb-4">
-        <QuizCard
-          key={quizWords[currentQuestion].id}
-          word={quizWords[currentQuestion]}
-          onAnswer={handleAnswer}
-          onExclude={handleExclude}
-          questionNum={currentQuestion + 1}
-          totalQuestions={quizWords.length}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="px-5 pt-8 pb-4 animate-slide-up flex flex-col items-center">
-      <div className="w-full max-w-sm text-center">
-        <div className="text-7xl mb-4">
-          {scorePercent >= 90 ? "🏆" : scorePercent >= 70 ? "🎉" : scorePercent >= 50 ? "👍" : "💪"}
-        </div>
-        <h2 className="text-2xl font-display font-bold text-white mb-2">
-          {scorePercent >= 90 ? "Превосходно!" : scorePercent >= 70 ? "Отлично!" : scorePercent >= 50 ? "Хорошо!" : "Продолжай учить!"}
-        </h2>
-        <div className="mt-6 p-6 rounded-2xl bg-slate-800/60 border border-slate-700/40">
-          <div className="text-5xl font-bold text-brand-400 mb-1">{score}/{totalAnswered}</div>
-          <p className="text-sm text-slate-400">правильных ответов</p>
-          <div className="mt-4 w-full h-3 bg-slate-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ${
-                scorePercent >= 70 ? "bg-emerald-500" : scorePercent >= 50 ? "bg-amber-500" : "bg-red-500"
-              }`}
-              style={{ width: `${scorePercent}%` }}
-            />
-          </div>
-          <p className="text-xs text-slate-500 mt-2">{scorePercent}%</p>
-        </div>
-        <div className="flex gap-3 mt-8">
-          <button
-            onClick={() => setState("setup")}
-            className="flex-1 py-3.5 rounded-2xl bg-slate-800 border border-slate-700/50 text-slate-300 font-medium active:scale-95 transition-all"
-          >
-            Настройки
-          </button>
-          <button
-            onClick={startQuiz}
-            className="flex-1 py-3.5 rounded-2xl bg-brand-500 text-white font-medium active:scale-95 transition-all"
-          >
-            Ещё раз
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

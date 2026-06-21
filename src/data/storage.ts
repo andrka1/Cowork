@@ -1,5 +1,5 @@
-// Unified progress tracking: spaced repetition + word of day + TTS (v2)
-// merged with word exclusion + grammar results (IELTS upgrade)
+// Unified progress tracking: spaced repetition + word of day + TTS (v3)
+// merged with word exclusion + grammar results + app settings (accent / speed / auto-speak)
 
 export interface QuizResult {
   date: string;
@@ -15,6 +15,14 @@ export interface GrammarResult {
   topic: string; // "tenses" | "irregulars" | tense id
 }
 
+export type Accent = "en-US" | "en-GB";
+
+export interface AppSettings {
+  accent: Accent;
+  rate: number; // 0.6 (slow) – 1.1 (fast)
+  autoSpeak: boolean; // auto-pronounce when a flashcard appears
+}
+
 export interface UserProgress {
   learnedWords: number[];
   excludedWords: number[];
@@ -28,9 +36,16 @@ export interface UserProgress {
   dailyGoal: number;
   wordsToday: number;
   lastWordOfDay: { id: number; date: string } | null;
+  settings: AppSettings;
 }
 
 const STORAGE_KEY = "lingua_mini_progress";
+
+const defaultSettings: AppSettings = {
+  accent: "en-US",
+  rate: 0.85,
+  autoSpeak: true,
+};
 
 const defaultProgress: UserProgress = {
   learnedWords: [],
@@ -45,17 +60,22 @@ const defaultProgress: UserProgress = {
   dailyGoal: 10,
   wordsToday: 0,
   lastWordOfDay: null,
+  settings: { ...defaultSettings },
 };
 
 export function getProgress(): UserProgress {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return { ...defaultProgress };
+    if (!stored) return { ...defaultProgress, settings: { ...defaultSettings } };
     const parsed = JSON.parse(stored);
-    // Migration: ensure all fields exist for older saves
-    return { ...defaultProgress, ...parsed };
+    // Migration: ensure all fields exist for older saves (incl. nested settings)
+    return {
+      ...defaultProgress,
+      ...parsed,
+      settings: { ...defaultSettings, ...(parsed.settings || {}) },
+    };
   } catch {
-    return { ...defaultProgress };
+    return { ...defaultProgress, settings: { ...defaultSettings } };
   }
 }
 
@@ -241,24 +261,81 @@ export function getStreak(): number {
   return 0;
 }
 
-// ---- Text-to-Speech pronunciation ----
+// ---- App settings (accent / speed / auto-speak) ----
 
-export function speak(text: string, lang: string = "en-US"): void {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
+export function getSettings(): AppSettings {
+  return getProgress().settings;
+}
+
+export function saveSettings(partial: Partial<AppSettings>): AppSettings {
+  const progress = getProgress();
+  progress.settings = { ...progress.settings, ...partial };
+  saveProgress(progress);
+  return progress.settings;
+}
+
+export function setDailyGoal(goal: number): void {
+  const progress = getProgress();
+  progress.dailyGoal = goal;
+  saveProgress(progress);
+}
+
+// ---- Text-to-Speech pronunciation ----
+// Robust voice handling: on many mobile/WebView engines getVoices() is empty on
+// the first call and only filled after the async 'voiceschanged' event, so we
+// cache voices and warm them up as early as possible.
+
+let cachedVoices: SpeechSynthesisVoice[] = [];
+
+function loadVoices(): SpeechSynthesisVoice[] {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
+  const v = window.speechSynthesis.getVoices();
+  if (v && v.length) cachedVoices = v;
+  return cachedVoices;
+}
+
+// Call once at startup to prime the voice list.
+export function primeVoices(): void {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = () => loadVoices();
+}
+
+function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
+  const voices = cachedVoices.length ? cachedVoices : loadVoices();
+  if (!voices.length) return undefined;
+  const langLower = lang.toLowerCase();
+  const region = langLower.split("-")[1];
+  // Prefer natural / high-quality voices, in the exact locale when possible.
+  const preferred = ["google", "natural", "premium", "siri", "microsoft", "daniel", "samantha"];
+  const norm = (l: string) => l.toLowerCase().replace("_", "-");
+  const exact = voices.filter((v) => norm(v.lang) === langLower);
+  const sameRegion = region ? voices.filter((v) => norm(v.lang).includes(region)) : [];
+  const anyEnglish = voices.filter((v) => norm(v.lang).startsWith("en"));
+  const byQuality = (list: SpeechSynthesisVoice[]) =>
+    list.find((v) => preferred.some((n) => v.name.toLowerCase().includes(n))) || list[0];
+  return byQuality(exact) || byQuality(sameRegion) || byQuality(anyEnglish);
+}
+
+export function speak(text: string, langOverride?: string): void {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  const settings = getProgress().settings;
+  const lang = langOverride || settings.accent || "en-US";
+  const synth = window.speechSynthesis;
+
+  synth.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
-  utterance.rate = 0.85;
+  utterance.rate = settings.rate || 0.85;
   utterance.pitch = 1;
 
-  const voices = window.speechSynthesis.getVoices();
-  const englishVoice =
-    voices.find((v) => v.lang.startsWith("en") && v.name.includes("Google")) ||
-    voices.find((v) => v.lang.startsWith("en"));
-  if (englishVoice) utterance.voice = englishVoice;
+  const voice = pickVoice(lang);
+  if (voice) utterance.voice = voice;
 
-  window.speechSynthesis.speak(utterance);
+  // A short defer after cancel() avoids the engine swallowing the utterance and
+  // gives late-loading voices a chance to be applied.
+  setTimeout(() => synth.speak(utterance), 0);
 }
 
 // ---- Word of the day (skips learned and excluded) ----
@@ -291,4 +368,9 @@ export function getWordOfDay(words: { id: number }[]): number {
 
 export function resetProgress(): void {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+// Warm up the voice list as soon as this module is imported (browser only).
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  primeVoices();
 }

@@ -7,6 +7,7 @@ import GrammarPage from "./pages/GrammarPage";
 import TensesPage from "./pages/TensesPage";
 import IrregularsPage from "./pages/IrregularsPage";
 import WordsManagerPage from "./pages/WordsManagerPage";
+import SettingsPage from "./pages/SettingsPage";
 import BottomNav from "./components/BottomNav";
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/grammar/irregulars" element={<IrregularsPage />} />
           <Route path="/grammar/exceptions" element={<IrregularsPage />} />
           <Route path="/words" element={<WordsManagerPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/stats" element={<StatsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
