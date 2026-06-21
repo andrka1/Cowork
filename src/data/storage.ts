@@ -1,4 +1,4 @@
-// Unified progress tracking: spaced repetition + word of day + TTS (v5)
+// Unified progress tracking: spaced repetition + word of day + TTS (v6)
 // merged with word exclusion + grammar results + app settings (accent / speed / auto-speak)
 import { Capacitor } from "@capacitor/core";
 
@@ -331,7 +331,8 @@ function googleTtsUrl(text: string, lang: string, rate: number): string {
   const tl = (lang || "en-US").split("-")[0] || "en";
   const speed = rate < 0.8 ? 0.3 : 1;
   const q = encodeURIComponent(text.slice(0, 200));
-  return `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&ttsspeed=${speed}&q=${q}`;
+  const base = "https://translate.google.com/translate_tts";
+  return base + "?ie=UTF-8&client=tw-ob&tl=" + tl + "&ttsspeed=" + speed + "&q=" + q;
 }
 
 function speakViaAudio(text: string, lang: string, rate: number): Promise<void> {
