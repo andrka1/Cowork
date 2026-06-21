@@ -1,4 +1,4 @@
-// Unified progress tracking: spaced repetition + word of day + TTS (v8)
+// Unified progress tracking: spaced repetition + word of day + TTS (v9)
 // merged with word exclusion + grammar results + app settings (accent / speed / auto-speak)
 import { Capacitor } from "@capacitor/core";
 
@@ -292,6 +292,65 @@ export function setDailyGoal(goal: number): void {
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let currentAudio: HTMLAudioElement | null = null;
 
+// ---- Mobile autoplay unlock ----
+// Mobile WebViews refuse to play audio that was not started by a user gesture,
+// which is why the flashcard AUTO-pronounce (fires on its own when a card shows)
+// could stay completely silent while the quiz worked (there sound always starts
+// right after a tap). We unlock playback on the very first user interaction by
+// playing a tiny silent clip; afterwards programmatic speak() — including
+// auto-speak — is allowed by the WebView.
+let audioUnlocked = false;
+
+function silentWavUri(): string {
+  const sampleRate = 8000;
+  const numSamples = 8; // ~1ms of 8-bit mono silence
+  const dataSize = numSamples;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+  const writeStr = (off: number, s: string) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i));
+  };
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate, true); // byte rate (blockAlign = 1)
+  view.setUint16(32, 1, true); // block align
+  view.setUint16(34, 8, true); // bits per sample
+  writeStr(36, "data");
+  view.setUint32(40, dataSize, true);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < numSamples; i++) bytes[44 + i] = 128; // 8-bit silence is centered at 128
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return "data:audio/wav;base64," + btoa(bin);
+}
+
+export function enableAudioUnlock(): void {
+  if (typeof document === "undefined") return;
+  const unlock = () => {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      const a = new Audio(silentWavUri());
+      a.volume = 0;
+      const p = a.play();
+      if (p && typeof (p as Promise<void>).catch === "function") {
+        (p as Promise<void>).catch(() => {});
+      }
+    } catch {
+      // ignore — best effort
+    }
+  };
+  ["touchend", "pointerdown", "mousedown", "click", "keydown"].forEach((ev) =>
+    document.addEventListener(ev, unlock, { passive: true })
+  );
+}
+
 function loadVoices(): SpeechSynthesisVoice[] {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
   const v = window.speechSynthesis.getVoices();
@@ -462,7 +521,7 @@ export async function speak(text: string, langOverride?: string): Promise<void> 
       const ok = speakViaWebSpeech(text, lang, rate);
       if (!ok) {
         const msg = e && (e as Error).message ? (e as Error).message : String(e);
-        toast("🔇 Звук не загрузился (" + msg + "). Нужен интернет для слов без офлайн-озвучки.");
+        toast("\uD83D\uDD07 Звук не загрузился (" + msg + "). Нужен интернет для слов без офлайн-озвучки.");
       }
     }
     return;
@@ -510,3 +569,7 @@ export function resetProgress(): void {
 if (typeof window !== "undefined" && "speechSynthesis" in window) {
   primeVoices();
 }
+
+// Attach the mobile autoplay unlock as early as possible so the first user
+// gesture (e.g. tapping a category) unlocks audio before any auto-speak runs.
+enableAudioUnlock();

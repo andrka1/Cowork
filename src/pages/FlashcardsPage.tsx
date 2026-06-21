@@ -11,7 +11,7 @@ export default function FlashcardsPage() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(category || null);
-  const [filterMode, setFilterMode] = useState<FilterMode>("new");
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [excludeVersion, setExcludeVersion] = useState(0);
 
   const excludedIds = useMemo(() => new Set(getExcludedIds()), [excludeVersion]);
@@ -153,9 +153,9 @@ export default function FlashcardsPage() {
       {/* Filter tabs */}
       <div className="flex gap-2 mb-5">
         {([
+          { key: "all" as FilterMode, label: "Все", emoji: "📖" },
           { key: "new" as FilterMode, label: "Новые", emoji: "🆕" },
           { key: "learned" as FilterMode, label: "Выученные", emoji: "✅" },
-          { key: "all" as FilterMode, label: "Все", emoji: "📖" },
         ]).map(({ key, label, emoji }) => (
           <button
             key={key}
