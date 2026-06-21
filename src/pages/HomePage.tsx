@@ -110,6 +110,19 @@ export default function HomePage() {
         </button>
       </div>
 
+      {/* Spelling trainer */}
+      <button
+        onClick={() => navigate("/spelling")}
+        className="w-full mb-3 p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-left transition-all active:scale-[0.98] shadow-soft flex items-center gap-4"
+      >
+        <div className="text-2xl">⌨️</div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-sm">Письмо</h3>
+          <p className="text-xs text-white/80 mt-0.5">Впиши слово по буквам — прокачай правописание</p>
+        </div>
+        <span className="text-white/70 text-xl">→</span>
+      </button>
+
       {/* Grammar */}
       <button
         onClick={() => navigate("/grammar")}
