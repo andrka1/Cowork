@@ -171,6 +171,7 @@ export default function SpellingPage() {
 
   // ---- Active screen ----
   const progressPct = Math.round((index / deck.length) * 100);
+  const barStyle = { width: progressPct + "%" };
   return (
     <div className="px-5 pt-6 pb-4 animate-fade-in">
       {/* Header */}
@@ -192,10 +193,7 @@ export default function SpellingPage() {
 
       {/* Progress bar */}
       <div className="h-1.5 w-full bg-slate-800 rounded-full mb-6 overflow-hidden">
-        <div
-          className="h-full bg-brand-500 transition-all duration-300"
-          style= width: progressPct + "%" 
-        />
+        <div className="h-full bg-brand-500 transition-all duration-300" style={barStyle} />
       </div>
 
       {/* Prompt */}
