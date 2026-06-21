@@ -1,4 +1,4 @@
-// Unified progress tracking: spaced repetition + word of day + TTS (v4)
+// Unified progress tracking: spaced repetition + word of day + TTS (v5)
 // merged with word exclusion + grammar results + app settings (accent / speed / auto-speak)
 import { Capacitor } from "@capacitor/core";
 
@@ -342,6 +342,7 @@ function speakViaAudio(text: string, lang: string, rate: number): Promise<void> 
         currentAudio = null;
       }
       const audio = new Audio(googleTtsUrl(text, lang, rate));
+      audio.crossOrigin = "anonymous";
       currentAudio = audio;
       audio.onended = () => resolve();
       audio.onerror = () => reject(new Error("tts audio error"));
