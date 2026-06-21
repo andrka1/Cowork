@@ -131,7 +131,7 @@ export default function QuizCard({ word, onAnswer, onExclude, questionNum, total
         </button>
 
         <span className="text-xs uppercase tracking-widest text-slate-500 mb-3 block">
-          {hideWord ? "\uD83C\uDFA7 Послушай и выбери перевод" : "Переведи слово"}
+          {hideWord ? "🎧 Послушай и выбери перевод" : "Переведи слово"}
         </span>
 
         {hideWord ? (
@@ -164,7 +164,7 @@ export default function QuizCard({ word, onAnswer, onExclude, questionNum, total
         {/* Show explanation after answering, if available */}
         {showResult && word.note && (
           <p className="mt-4 text-xs text-amber-200/90 bg-amber-400/10 border border-amber-300/20 rounded-xl p-2">
-            \uD83D\uDCA1 {word.note}
+            💡 {word.note}
           </p>
         )}
       </div>

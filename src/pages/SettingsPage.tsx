@@ -20,8 +20,8 @@ export default function SettingsPage() {
   };
 
   const accents: { key: "en-US" | "en-GB"; label: string; flag: string }[] = [
-    { key: "en-US", label: "Американский", flag: "\uD83C\uDDFA\uD83C\uDDF8" },
-    { key: "en-GB", label: "Британский", flag: "\uD83C\uDDEC\uD83C\uDDE7" },
+    { key: "en-US", label: "Американский", flag: "🇺🇸" },
+    { key: "en-GB", label: "Британский", flag: "🇬🇧" },
   ];
 
   const speeds: { key: number; label: string }[] = [
@@ -48,7 +48,7 @@ export default function SettingsPage() {
           onClick={() => navigate(-1)}
           className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
         >
-          \u2190
+          ←
         </button>
         <h1 className="text-2xl font-display font-bold text-white">Настройки</h1>
       </div>
@@ -56,7 +56,7 @@ export default function SettingsPage() {
       {/* Pronunciation */}
       <div className="mb-6">
         <h2 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-          \uD83D\uDD0A Озвучка
+          🔊 Озвучка
         </h2>
 
         {/* Accent */}
@@ -127,14 +127,14 @@ export default function SettingsPage() {
           onClick={() => speak("This is how the voice sounds.", settings.accent)}
           className="w-full mt-3 py-3 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-300 text-sm font-medium active:scale-[0.98] transition-all"
         >
-          \uD83D\uDD0A Прослушать пример
+          🔊 Прослушать пример
         </button>
       </div>
 
       {/* Daily goal */}
       <div className="mb-6">
         <h2 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-          \uD83C\uDFAF Дневная цель
+          🎯 Дневная цель
         </h2>
         <div className="flex gap-2">
           {goals.map((g) => (

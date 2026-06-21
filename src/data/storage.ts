@@ -323,7 +323,8 @@ export function speak(text: string, langOverride?: string): void {
   const lang = langOverride || settings.accent || "en-US";
   const synth = window.speechSynthesis;
 
-  synth.cancel();
+  // Make sure the voice list is loaded before we pick one.
+  if (!cachedVoices.length) loadVoices();
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
@@ -333,9 +334,16 @@ export function speak(text: string, langOverride?: string): void {
   const voice = pickVoice(lang);
   if (voice) utterance.voice = voice;
 
-  // A short defer after cancel() avoids the engine swallowing the utterance and
-  // gives late-loading voices a chance to be applied.
-  setTimeout(() => synth.speak(utterance), 0);
+  // Call cancel + speak synchronously inside the user gesture. Deferring with a
+  // timer breaks audio on mobile WebViews, which require speak() to run during
+  // the tap handler. resume() clears any stuck "paused" state from a prior cancel.
+  try {
+    synth.cancel();
+    synth.resume();
+    synth.speak(utterance);
+  } catch {
+    // ignore TTS errors
+  }
 }
 
 // ---- Word of the day (skips learned and excluded) ----

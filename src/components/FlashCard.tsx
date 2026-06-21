@@ -130,11 +130,11 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
             <span className="text-xs uppercase tracking-widest text-brand-200 mb-3">Перевод</span>
             <h2 className="text-3xl font-display font-bold text-white mb-3 text-center">{word.ru}</h2>
             <div className="bg-white/10 rounded-2xl p-4 w-full">
-              <p className="text-sm text-brand-100 text-center italic">\"{word.example}\"</p>
+              <p className="text-sm text-brand-100 text-center italic">«{word.example}»</p>
             </div>
             {word.note && (
               <div className="mt-3 bg-amber-400/15 border border-amber-300/30 rounded-2xl p-3 w-full">
-                <p className="text-xs text-amber-100 text-center">\uD83D\uDCA1 {word.note}</p>
+                <p className="text-xs text-amber-100 text-center">💡 {word.note}</p>
               </div>
             )}
             <button
@@ -155,7 +155,7 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
           onClick={handlePrev}
           className="flex-1 py-3.5 rounded-2xl bg-slate-800 border border-slate-700/50 text-slate-300 font-medium transition-all active:scale-95"
         >
-          \u2190
+          ←
         </button>
         <button
           onClick={handleLearned}
@@ -167,13 +167,13 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
               : "bg-brand-500 text-white hover:bg-brand-600"
           }`}
         >
-          {animating ? "\u2713 Выучил!" : learned ? "Убрать из выученных" : "Знаю \u2713"}
+          {animating ? "✓ Выучил!" : learned ? "Убрать из выученных" : "Знаю ✓"}
         </button>
         <button
           onClick={handleNext}
           className="flex-1 py-3.5 rounded-2xl bg-slate-800 border border-slate-700/50 text-slate-300 font-medium transition-all active:scale-95"
         >
-          \u2192
+          →
         </button>
       </div>
     </div>

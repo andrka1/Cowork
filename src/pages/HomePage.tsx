@@ -54,12 +54,12 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <span className="text-lg">\uD83D\uDD25</span>
+              <span className="text-lg">🔥</span>
               <span className="text-sm font-bold text-white">{streak}</span>
               <span className="text-xs text-slate-500">дн.</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-lg">\uD83C\uDD95</span>
+              <span className="text-lg">🆕</span>
               <span className="text-sm font-bold text-white">{newWordsCount}</span>
               <span className="text-xs text-slate-500">новых</span>
             </div>
@@ -86,7 +86,7 @@ export default function HomePage() {
           <h3 className="text-2xl font-display font-bold text-white mb-1">{wordOfDay.en}</h3>
           <p className="text-sm text-slate-400 font-mono mb-1">{wordOfDay.transcription}</p>
           <p className="text-base text-indigo-200">{wordOfDay.ru}</p>
-          <p className="text-xs text-slate-500 mt-2 italic">\"{wordOfDay.example}\"</p>
+          <p className="text-xs text-slate-500 mt-2 italic">«{wordOfDay.example}»</p>
         </div>
       )}
 
@@ -96,7 +96,7 @@ export default function HomePage() {
           onClick={() => navigate("/flashcards")}
           className="p-5 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 text-white text-left transition-all active:scale-[0.97] shadow-soft"
         >
-          <div className="text-2xl mb-2">\uD83D\uDCDA</div>
+          <div className="text-2xl mb-2">📚</div>
           <h3 className="font-semibold text-sm">Карточки</h3>
           <p className="text-xs text-brand-200 mt-0.5">{newWordsCount} новых слов</p>
         </button>
@@ -104,7 +104,7 @@ export default function HomePage() {
           onClick={() => navigate("/quiz")}
           className="p-5 rounded-2xl bg-gradient-to-br from-accent-500 to-accent-600 text-white text-left transition-all active:scale-[0.97] shadow-soft"
         >
-          <div className="text-2xl mb-2">\uD83E\uDDE0</div>
+          <div className="text-2xl mb-2">🧠</div>
           <h3 className="font-semibold text-sm">Квиз</h3>
           <p className="text-xs text-orange-200 mt-0.5">Проверь себя</p>
         </button>
@@ -115,12 +115,12 @@ export default function HomePage() {
         onClick={() => navigate("/grammar")}
         className="w-full mb-6 p-5 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-left transition-all active:scale-[0.98] shadow-soft flex items-center gap-4"
       >
-        <div className="text-2xl">\u23F3</div>
+        <div className="text-2xl">⏳</div>
         <div className="flex-1">
           <h3 className="font-semibold text-sm">Грамматика</h3>
-          <p className="text-xs text-white/80 mt-0.5">Времена \u00B7 неправильные глаголы \u00B7 исключения</p>
+          <p className="text-xs text-white/80 mt-0.5">Времена · неправильные глаголы · исключения</p>
         </div>
-        <span className="text-white/70 text-xl">\u2192</span>
+        <span className="text-white/70 text-xl">→</span>
       </button>
 
       {/* Categories */}
