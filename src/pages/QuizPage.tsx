@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { words, categories } from "../data/words";
 import {
   saveQuizResult,
   getProgress,
   recordWordError,
+  recordWordCorrect,
+  getWeakWordIds,
   excludeWord,
   getExcludedIds,
 } from "../data/storage";
@@ -22,6 +24,29 @@ export default function QuizPage() {
   const [quizWords, setQuizWords] = useState<typeof words>([]);
   const [answered, setAnswered] = useState(0);
 
+  // How many words are available for each mode in the chosen category.
+  const modeCounts = useMemo<Record<QuizMode, number>>(() => {
+    const progress = getProgress();
+    const excluded = new Set(getExcludedIds());
+    const weak = new Set(getWeakWordIds());
+    const inCategory = (w: (typeof words)[number]) =>
+      selectedCategory === "all" ? true : w.category === selectedCategory;
+    const base = words.filter((w) => inCategory(w) && !excluded.has(w.id));
+    return {
+      new: base.filter((w) => !progress.learnedWords.includes(w.id)).length,
+      errors: base.filter((w) => weak.has(w.id)).length,
+      all: base.length,
+    };
+  }, [selectedCategory, state]);
+
+  // Keep the selected mode valid when the category (and thus counts) change.
+  useEffect(() => {
+    if (modeCounts[quizMode] === 0) {
+      if (modeCounts.new > 0) setQuizMode("new");
+      else if (modeCounts.all > 0) setQuizMode("all");
+    }
+  }, [modeCounts, quizMode]);
+
   const startQuiz = () => {
     const progress = getProgress();
     const excluded = new Set(getExcludedIds());
@@ -35,8 +60,11 @@ export default function QuizPage() {
     if (quizMode === "new") {
       pool = pool.filter((w) => !progress.learnedWords.includes(w.id));
     } else if (quizMode === "errors") {
-      const errorIds = Object.keys(progress.wordErrors).map(Number);
-      pool = pool.filter((w) => errorIds.includes(w.id));
+      const weakOrder = getWeakWordIds(); // most-failed first
+      const weakSet = new Set(weakOrder);
+      pool = pool
+        .filter((w) => weakSet.has(w.id))
+        .sort((a, b) => weakOrder.indexOf(a.id) - weakOrder.indexOf(b.id));
     }
 
     // Fallback if the chosen filter empties the pool
@@ -44,8 +72,10 @@ export default function QuizPage() {
       pool = words.filter((w) => inCategory(w) && !excluded.has(w.id));
     }
 
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, Math.min(questionCount, pool.length));
+    // Errors mode keeps the weak-first order; other modes are shuffled.
+    const ordered =
+      quizMode === "errors" ? pool : [...pool].sort(() => Math.random() - 0.5);
+    const selected = ordered.slice(0, Math.min(questionCount, ordered.length));
     setQuizWords(selected);
     setCurrentQuestion(0);
     setScore(0);
@@ -60,7 +90,10 @@ export default function QuizPage() {
 
   const handleAnswer = (correct: boolean) => {
     const current = quizWords[currentQuestion];
-    if (!correct && current) recordWordError(current.id);
+    if (current) {
+      if (correct) recordWordCorrect(current.id);
+      else recordWordError(current.id);
+    }
     const newScore = correct ? score + 1 : score;
     const newAnswered = answered + 1;
     setScore(newScore);
@@ -109,19 +142,25 @@ export default function QuizPage() {
               { key: "new" as QuizMode, label: "Новые", emoji: "🆕" },
               { key: "errors" as QuizMode, label: "Ошибки", emoji: "❌" },
               { key: "all" as QuizMode, label: "Все", emoji: "📖" },
-            ]).map(({ key, label, emoji }) => (
-              <button
-                key={key}
-                onClick={() => setQuizMode(key)}
-                className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${
-                  quizMode === key
-                    ? "bg-brand-500 text-white"
-                    : "bg-slate-800 text-slate-400 border border-slate-700/50"
-                }`}
-              >
-                {emoji} {label}
-              </button>
-            ))}
+            ]).map(({ key, label, emoji }) => {
+              const count = modeCounts[key];
+              const disabled = count === 0;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setQuizMode(key)}
+                  disabled={disabled}
+                  className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${
+                    quizMode === key
+                      ? "bg-brand-500 text-white"
+                      : "bg-slate-800 text-slate-400 border border-slate-700/50"
+                  } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                >
+                  {emoji} {label}
+                  <span className="block text-[10px] opacity-70 mt-0.5">{count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -177,7 +216,8 @@ export default function QuizPage() {
 
         <button
           onClick={startQuiz}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold text-lg transition-all active:scale-[0.98] shadow-soft"
+          disabled={modeCounts[quizMode] === 0}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold text-lg transition-all active:scale-[0.98] shadow-soft disabled:opacity-40"
         >
           Начать квиз
         </button>

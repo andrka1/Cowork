@@ -150,8 +150,32 @@ export function recordWordError(wordId: number): void {
   saveProgress(progress);
 }
 
+// Correct answer eases off the weak-word counter (spaced repetition).
+// Once it reaches zero the word leaves the "weak" list entirely.
+export function recordWordCorrect(wordId: number): void {
+  const progress = getProgress();
+  const current = progress.wordErrors[wordId];
+  if (current === undefined) return;
+  if (current <= 1) {
+    delete progress.wordErrors[wordId];
+  } else {
+    progress.wordErrors[wordId] = current - 1;
+  }
+  saveProgress(progress);
+}
+
 export function getWordErrors(): Record<number, number> {
   return getProgress().wordErrors;
+}
+
+// Ids of words that still have outstanding errors (weak spots),
+// ordered most-failed first so reviews target the hardest words.
+export function getWeakWordIds(): number[] {
+  const errors = getProgress().wordErrors;
+  return Object.keys(errors)
+    .map(Number)
+    .filter((id) => errors[id] > 0)
+    .sort((a, b) => errors[b] - errors[a]);
 }
 
 // ---- Quiz & grammar results ----

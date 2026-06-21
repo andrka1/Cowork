@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { getProgress, getStreak } from "../data/storage";
+import { getProgress, getStreak, getWeakWordIds } from "../data/storage";
 import { words, categories } from "../data/words";
 import ProgressRing from "../components/ProgressRing";
 
@@ -29,6 +29,7 @@ export default function StatsPage() {
         )
       : 0;
   const excludedCount = progress.excludedWords.length;
+  const weakCount = getWeakWordIds().length;
 
   return (
     <div className="px-5 pt-8 pb-4 animate-fade-in">
@@ -65,6 +66,25 @@ export default function StatsPage() {
           <div className="text-[10px] text-slate-400 mt-0.5">средний</div>
         </div>
       </div>
+
+      {/* Weak words review shortcut */}
+      {weakCount > 0 && (
+        <button
+          onClick={() => navigate("/quiz")}
+          className="w-full mb-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between active:scale-[0.98] transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div className="text-left">
+              <div className="text-sm font-semibold text-white">Слабые слова</div>
+              <div className="text-[11px] text-amber-200/80">
+                {weakCount} требуют повторения
+              </div>
+            </div>
+          </div>
+          <span className="text-xs text-amber-300">Повторить →</span>
+        </button>
+      )}
 
       {/* Grammar + hidden words */}
       <div className="grid grid-cols-2 gap-3 mb-8">
