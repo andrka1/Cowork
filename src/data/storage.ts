@@ -1,5 +1,6 @@
-// Unified progress tracking: spaced repetition + word of day + TTS (v3)
+// Unified progress tracking: spaced repetition + word of day + TTS (v4)
 // merged with word exclusion + grammar results + app settings (accent / speed / auto-speak)
+import { Capacitor } from "@capacitor/core";
 
 export interface QuizResult {
   date: string;
@@ -280,12 +281,20 @@ export function setDailyGoal(goal: number): void {
   saveProgress(progress);
 }
 
-// ---- Text-to-Speech pronunciation ----
-// Robust voice handling: on many mobile/WebView engines getVoices() is empty on
-// the first call and only filled after the async 'voiceschanged' event, so we
-// cache voices and warm them up as early as possible.
+// ===================== Text-to-Speech pronunciation =====================
+// IMPORTANT: inside the Android WebView (the packaged APK) the Web Speech API
+// (window.speechSynthesis) is effectively unavailable — getVoices() is empty and
+// speak() produces no audio. That is why nothing was heard in the app.
+//
+// Strategy:
+//   • On a native platform (Capacitor / APK): stream the pronunciation as an
+//     MP3 from Google Translate TTS and play it through a normal <audio> element.
+//     The WebView media stack plays this reliably, no native plugin required.
+//   • On the web (real browser): use the built-in speechSynthesis, which works
+//     offline and well there, and fall back to the audio stream if needed.
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
+let currentAudio: HTMLAudioElement | null = null;
 
 function loadVoices(): SpeechSynthesisVoice[] {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
@@ -294,7 +303,7 @@ function loadVoices(): SpeechSynthesisVoice[] {
   return cachedVoices;
 }
 
-// Call once at startup to prime the voice list.
+// Call once at startup to prime the voice list (web only).
 export function primeVoices(): void {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   loadVoices();
@@ -306,7 +315,6 @@ function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
   if (!voices.length) return undefined;
   const langLower = lang.toLowerCase();
   const region = langLower.split("-")[1];
-  // Prefer natural / high-quality voices, in the exact locale when possible.
   const preferred = ["google", "natural", "premium", "siri", "microsoft", "daniel", "samantha"];
   const norm = (l: string) => l.toLowerCase().replace("_", "-");
   const exact = voices.filter((v) => norm(v.lang) === langLower);
@@ -317,32 +325,76 @@ function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
   return byQuality(exact) || byQuality(sameRegion) || byQuality(anyEnglish);
 }
 
-export function speak(text: string, langOverride?: string): void {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  const settings = getProgress().settings;
-  const lang = langOverride || settings.accent || "en-US";
+// Build a Google Translate TTS stream URL. tl only supports the base language
+// (e.g. "en"); ttsspeed slows playback down for the "slow" speed setting.
+function googleTtsUrl(text: string, lang: string, rate: number): string {
+  const tl = (lang || "en-US").split("-")[0] || "en";
+  const speed = rate < 0.8 ? 0.3 : 1;
+  const q = encodeURIComponent(text.slice(0, 200));
+  return `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${tl}&ttsspeed=${speed}&q=${q}`;
+}
+
+function speakViaAudio(text: string, lang: string, rate: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      const audio = new Audio(googleTtsUrl(text, lang, rate));
+      currentAudio = audio;
+      audio.onended = () => resolve();
+      audio.onerror = () => reject(new Error("tts audio error"));
+      const p = audio.play();
+      if (p && typeof (p as Promise<void>).catch === "function") {
+        (p as Promise<void>).catch(reject);
+      }
+    } catch (e) {
+      reject(e as Error);
+    }
+  });
+}
+
+function speakViaWebSpeech(text: string, lang: string, rate: number): boolean {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
   const synth = window.speechSynthesis;
-
-  // Make sure the voice list is loaded before we pick one.
   if (!cachedVoices.length) loadVoices();
-
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
-  utterance.rate = settings.rate || 0.85;
+  utterance.rate = rate || 0.85;
   utterance.pitch = 1;
-
   const voice = pickVoice(lang);
   if (voice) utterance.voice = voice;
-
-  // Call cancel + speak synchronously inside the user gesture. Deferring with a
-  // timer breaks audio on mobile WebViews, which require speak() to run during
-  // the tap handler. resume() clears any stuck "paused" state from a prior cancel.
   try {
     synth.cancel();
     synth.resume();
     synth.speak(utterance);
+    return true;
   } catch {
-    // ignore TTS errors
+    return false;
+  }
+}
+
+export async function speak(text: string, langOverride?: string): Promise<void> {
+  if (!text) return;
+  const settings = getProgress().settings;
+  const lang = langOverride || settings.accent || "en-US";
+  const rate = settings.rate || 0.85;
+
+  // Native (APK): Web Speech API doesn't work in the WebView, use the audio
+  // stream and only fall back to speechSynthesis if the stream fails.
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await speakViaAudio(text, lang, rate);
+    } catch {
+      speakViaWebSpeech(text, lang, rate);
+    }
+    return;
+  }
+
+  // Web: prefer the built-in synthesizer, fall back to the audio stream.
+  if (!speakViaWebSpeech(text, lang, rate)) {
+    speakViaAudio(text, lang, rate).catch(() => {});
   }
 }
 
