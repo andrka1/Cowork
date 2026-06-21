@@ -10,7 +10,9 @@ export default function FlashcardsPage() {
   const { category } = useParams<{ category?: string }>();
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(category || null);
+  // No category picker anymore: the Cards tab opens ALL words straight away.
+  // A category may still arrive via a deep link (/flashcards/:category).
+  const [selectedCategory, setSelectedCategory] = useState<string>(category || "all");
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [excludeVersion, setExcludeVersion] = useState(0);
 
@@ -53,100 +55,33 @@ export default function FlashcardsPage() {
     });
   };
 
-  // Category selection view
-  if (!selectedCategory) {
-    const progress = getProgress();
-    const visibleNew = (catId: string) =>
-      words.filter(
-        (w) =>
-          w.category === catId &&
-          !excludedIds.has(w.id) &&
-          !progress.learnedWords.includes(w.id)
-      ).length;
-    const visibleTotal = (catId: string) =>
-      words.filter((w) => w.category === catId && !excludedIds.has(w.id)).length;
-
-    return (
-      <div className="px-5 pt-8 pb-4 animate-fade-in">
-        <h1 className="text-2xl font-display font-bold text-white mb-2">Карточки</h1>
-        <p className="text-slate-400 text-sm mb-6">Выбери категорию для изучения</p>
-        <div className="grid grid-cols-2 gap-3">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                setSelectedCategory(cat.id);
-                setCurrentIndex(0);
-                navigate(`/flashcards/${cat.id}`, { replace: true });
-              }}
-              className={`p-5 rounded-2xl bg-gradient-to-br ${cat.color} text-white text-left transition-all active:scale-[0.97] shadow-soft`}
-            >
-              <div className="text-3xl mb-2">{cat.emoji}</div>
-              <h3 className="font-semibold text-sm">{cat.name}</h3>
-              <p className="text-xs text-white/70 mt-0.5">
-                {visibleNew(cat.id)} новых / {visibleTotal(cat.id)}
-              </p>
-            </button>
-          ))}
-        </div>
-
-        {/* All words */}
-        <button
-          onClick={() => {
-            setSelectedCategory("all");
-            setCurrentIndex(0);
-          }}
-          className="w-full mt-4 p-5 rounded-2xl bg-slate-800/60 border border-slate-700/40 text-left transition-all active:scale-[0.98] hover:bg-slate-800"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🌍</span>
-            <div>
-              <h3 className="font-semibold text-white">Все слова</h3>
-              <p className="text-xs text-slate-400">
-                {words.filter((w) => !excludedIds.has(w.id) && !progress.learnedWords.includes(w.id)).length} новых / {words.filter((w) => !excludedIds.has(w.id)).length}
-              </p>
-            </div>
-          </div>
-        </button>
-
-        {/* Manage hidden words */}
-        <button
-          onClick={() => navigate("/words")}
-          className="w-full mt-3 p-4 rounded-2xl bg-slate-800/40 border border-slate-700/40 text-left transition-all active:scale-[0.98] hover:bg-slate-800 flex items-center gap-3"
-        >
-          <span className="text-2xl">🙈</span>
-          <div className="flex-1">
-            <h3 className="font-semibold text-white text-sm">Скрытые слова</h3>
-            <p className="text-xs text-slate-400">Слова, которые ты уже знаешь</p>
-          </div>
-          <span className="text-xs font-medium text-brand-400 bg-brand-500/10 px-2 py-1 rounded-full">
-            {excludedIds.size}
-          </span>
-        </button>
-      </div>
-    );
-  }
-
   const currentWord = filteredWords[Math.min(currentIndex, Math.max(filteredWords.length - 1, 0))];
   const categoryInfo = categories.find((c) => c.id === selectedCategory);
+  const isAll = selectedCategory === "all";
 
   return (
     <div className="px-5 pt-6 pb-4 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <button
-          onClick={() => {
-            setSelectedCategory(null);
-            navigate("/flashcards", { replace: true });
-          }}
-          className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
-        >
-          ←
-        </button>
+        {!isAll && (
+          <button
+            onClick={() => {
+              setSelectedCategory("all");
+              setCurrentIndex(0);
+              navigate("/flashcards", { replace: true });
+            }}
+            className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+          >
+            ←
+          </button>
+        )}
         <div className="flex-1">
           <h1 className="text-lg font-display font-bold text-white">
-            {selectedCategory === "all" ? "Все слова" : categoryInfo?.name}
+            {isAll ? "Карточки" : categoryInfo?.name}
           </h1>
+          {isAll && (
+            <p className="text-xs text-slate-400">Все слова в одной колоде</p>
+          )}
         </div>
       </div>
 
@@ -182,7 +117,7 @@ export default function FlashcardsPage() {
           </p>
           <p className="text-sm text-slate-400">
             {filterMode === "new"
-              ? "Все слова в этой категории выучены или скрыты."
+              ? "Все слова выучены или скрыты."
               : "Здесь пока нет таких слов."}
           </p>
           <button
