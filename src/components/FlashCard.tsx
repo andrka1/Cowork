@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Word } from "../data/words";
 import {
   markWordLearned,
@@ -22,6 +22,10 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
   const [learned, setLearned] = useState(isWordLearned(word.id));
   const [animating, setAnimating] = useState(false);
 
+  // Track a touch so we can tell a horizontal SWIPE (navigate) from a TAP (flip).
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
+
   // Auto-pronounce the word when the card appears (if enabled in settings).
   useEffect(() => {
     if (getSettings().autoSpeak) {
@@ -30,7 +34,59 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
     }
   }, [word.id]);
 
-  const handleFlip = () => setFlipped(!flipped);
+  const goNext = () => {
+    setFlipped(false);
+    setLearned(isWordLearned(word.id));
+    setTimeout(onNext, 150);
+  };
+
+  const goPrev = () => {
+    setFlipped(false);
+    setLearned(isWordLearned(word.id));
+    setTimeout(onPrev, 150);
+  };
+
+  // Keyboard navigation (web): ←/→ to move, Space/Enter to flip.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") goNext();
+      else if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        setFlipped((f) => !f);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [word.id]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+    swiped.current = false;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    touchStart.current = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      swiped.current = true; // suppress the flip that the tap would trigger
+      if (dx < 0) goNext();
+      else goPrev();
+    }
+  };
+
+  const handleFlip = () => {
+    if (swiped.current) {
+      swiped.current = false;
+      return;
+    }
+    setFlipped(!flipped);
+  };
 
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,23 +107,6 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
         onNext();
       }, 600);
     }
-  };
-
-  const handleNext = () => {
-    setFlipped(false);
-    setLearned(isWordLearned(word.id));
-    setTimeout(onNext, 150);
-  };
-
-  const handlePrev = () => {
-    setFlipped(false);
-    setLearned(isWordLearned(word.id));
-    setTimeout(onPrev, 150);
-  };
-
-  const handleExclude = () => {
-    setFlipped(false);
-    setTimeout(onExclude, 120);
   };
 
   const levelClass =
@@ -105,7 +144,12 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
       </div>
 
       {/* Card */}
-      <div className="card-flip w-full aspect-[3/4] max-h-[400px] cursor-pointer" onClick={handleFlip}>
+      <div
+        className="card-flip w-full aspect-[3/4] max-h-[400px] cursor-pointer"
+        onClick={handleFlip}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className={`card-flip-inner w-full h-full relative ${flipped ? "flipped" : ""}`}>
           {/* Front */}
           <div className="card-front absolute inset-0 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 shadow-card flex flex-col items-center justify-center p-8">
@@ -149,10 +193,13 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
         </div>
       </div>
 
+      {/* Swipe hint */}
+      <p className="text-[11px] text-slate-500 -mt-1">← свайп, чтобы листать →</p>
+
       {/* Controls */}
       <div className="flex items-center gap-3 w-full">
         <button
-          onClick={handlePrev}
+          onClick={goPrev}
           className="flex-1 py-3.5 rounded-2xl bg-slate-800 border border-slate-700/50 text-slate-300 font-medium transition-all active:scale-95"
         >
           ←
@@ -170,7 +217,7 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
           {animating ? "✓ Выучил!" : learned ? "Убрать из выученных" : "Знаю ✓"}
         </button>
         <button
-          onClick={handleNext}
+          onClick={goNext}
           className="flex-1 py-3.5 rounded-2xl bg-slate-800 border border-slate-700/50 text-slate-300 font-medium transition-all active:scale-95"
         >
           →
