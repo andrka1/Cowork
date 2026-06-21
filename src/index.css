@@ -24,6 +24,14 @@ body {
   -webkit-user-select: none;
 }
 
+/* IPA transcription: use a system font that actually ships the phonetic glyphs.
+   Inter / Manrope and the default monospace font lack many IPA symbols
+   (ə, ɛ, ˈ, ŋ ...), which is why they rendered as empty boxes. */
+.ipa {
+  font-family: "Noto Sans", "Roboto", "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.02em;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 3px;

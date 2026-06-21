@@ -3,6 +3,7 @@ import HomePage from "./pages/HomePage";
 import FlashcardsPage from "./pages/FlashcardsPage";
 import QuizPage from "./pages/QuizPage";
 import SpellingPage from "./pages/SpellingPage";
+import MatchingPage from "./pages/MatchingPage";
 import StatsPage from "./pages/StatsPage";
 import GrammarPage from "./pages/GrammarPage";
 import TensesPage from "./pages/TensesPage";
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/flashcards/:category" element={<FlashcardsPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/spelling" element={<SpellingPage />} />
+          <Route path="/match" element={<MatchingPage />} />
           <Route path="/grammar" element={<GrammarPage />} />
           <Route path="/grammar/tenses" element={<TensesPage />} />
           <Route path="/grammar/irregulars" element={<IrregularsPage />} />

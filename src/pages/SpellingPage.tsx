@@ -9,7 +9,6 @@ import {
   recordWordCorrect,
   markWordLearned,
   saveQuizResult,
-  speak,
 } from "../data/storage";
 
 const SESSION_SIZE = 12;
@@ -95,7 +94,6 @@ export default function SpellingPage() {
       setStatus("wrong");
       recordWordError(word.id);
     }
-    speak(word.en);
   };
 
   const next = () => {
@@ -113,7 +111,6 @@ export default function SpellingPage() {
     if (!word || status !== "idle") return;
     setStatus("wrong");
     recordWordError(word.id);
-    speak(word.en);
   };
 
   const restart = () => {
@@ -199,17 +196,7 @@ export default function SpellingPage() {
       {/* Prompt */}
       <div className="rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 p-6 mb-5 text-center">
         <span className="text-xs uppercase tracking-widest text-slate-500">Перевод</span>
-        <h2 className="text-3xl font-display font-bold text-white mt-2 mb-2">{word.ru}</h2>
-        <p className="text-sm text-slate-400 font-mono mb-4">{word.transcription}</p>
-        <button
-          onClick={() => speak(word.en)}
-          className="w-12 h-12 rounded-full bg-brand-500/20 border border-brand-500/30 inline-flex items-center justify-center text-brand-400 active:scale-90 transition-all"
-          aria-label="Озвучить"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-          </svg>
-        </button>
+        <h2 className="text-3xl font-display font-bold text-white mt-2 mb-1">{word.ru}</h2>
         {revealed && status === "idle" && (
           <p className="mt-4 text-lg font-mono tracking-[0.3em] text-amber-300">{mask(word.en)}</p>
         )}
