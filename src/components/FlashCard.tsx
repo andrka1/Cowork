@@ -109,6 +109,11 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
     }
   };
 
+  const handleExclude = () => {
+    setFlipped(false);
+    setTimeout(onExclude, 120);
+  };
+
   const levelClass =
     word.level === "A1"
       ? "bg-emerald-500/20 text-emerald-400"
