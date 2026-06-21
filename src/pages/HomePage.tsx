@@ -84,7 +84,7 @@ export default function HomePage() {
             </button>
           </div>
           <h3 className="text-2xl font-display font-bold text-white mb-1">{wordOfDay.en}</h3>
-          <p className="text-sm text-slate-400 font-mono mb-1">{wordOfDay.transcription}</p>
+          <p className="text-sm text-slate-400 ipa mb-1">{wordOfDay.transcription}</p>
           <p className="text-base text-indigo-200">{wordOfDay.ru}</p>
           <p className="text-xs text-slate-500 mt-2 italic">«{wordOfDay.example}»</p>
         </div>
@@ -110,18 +110,25 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* Spelling trainer */}
-      <button
-        onClick={() => navigate("/spelling")}
-        className="w-full mb-3 p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-left transition-all active:scale-[0.98] shadow-soft flex items-center gap-4"
-      >
-        <div className="text-2xl">⌨️</div>
-        <div className="flex-1">
+      {/* Spelling + Matching */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <button
+          onClick={() => navigate("/spelling")}
+          className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-left transition-all active:scale-[0.97] shadow-soft"
+        >
+          <div className="text-2xl mb-2">⌨️</div>
           <h3 className="font-semibold text-sm">Письмо</h3>
-          <p className="text-xs text-white/80 mt-0.5">Впиши слово по буквам — прокачай правописание</p>
-        </div>
-        <span className="text-white/70 text-xl">→</span>
-      </button>
+          <p className="text-xs text-white/80 mt-0.5">Впиши по буквам</p>
+        </button>
+        <button
+          onClick={() => navigate("/match")}
+          className="p-5 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 text-white text-left transition-all active:scale-[0.97] shadow-soft"
+        >
+          <div className="text-2xl mb-2">🧩</div>
+          <h3 className="font-semibold text-sm">Пары</h3>
+          <p className="text-xs text-white/80 mt-0.5">Соедини слово и перевод</p>
+        </button>
+      </div>
 
       {/* Grammar */}
       <button

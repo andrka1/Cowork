@@ -146,7 +146,7 @@ export default function QuizCard({ word, onAnswer, onExclude, questionNum, total
         ) : (
           <>
             <h2 className="text-3xl font-display font-bold text-white mb-2">{word.en}</h2>
-            <p className="text-sm text-slate-400 font-mono mb-3">{word.transcription}</p>
+            <p className="text-sm text-slate-400 ipa mb-3">{word.transcription}</p>
             <button
               onClick={handleSpeak}
               className="mx-auto w-10 h-10 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:bg-brand-500/30 active:scale-90 transition-all"

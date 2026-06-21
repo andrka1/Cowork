@@ -155,7 +155,7 @@ export default function WordsManagerPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-white truncate">{w.en}</span>
-                  <span className="text-xs text-slate-500 shrink-0">{w.transcription}</span>
+                  <span className="text-xs text-slate-500 shrink-0 ipa">{w.transcription}</span>
                 </div>
                 <p className="text-xs text-slate-400 truncate">{w.ru}</p>
               </div>

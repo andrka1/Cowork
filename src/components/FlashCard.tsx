@@ -160,7 +160,7 @@ export default function FlashCard({ word, onNext, onPrev, onExclude, index, tota
           <div className="card-front absolute inset-0 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 shadow-card flex flex-col items-center justify-center p-8">
             <span className="text-xs uppercase tracking-widest text-slate-500 mb-4">Английский</span>
             <h2 className="text-4xl font-display font-bold text-white mb-3 text-center">{word.en}</h2>
-            <p className="text-lg text-slate-400 font-mono mb-4">{word.transcription}</p>
+            <p className="text-lg text-slate-400 ipa mb-4">{word.transcription}</p>
             <button
               onClick={handleSpeak}
               className="mt-2 w-12 h-12 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:bg-brand-500/30 active:scale-90 transition-all"
