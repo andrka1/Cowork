@@ -17,7 +17,10 @@ export default function GrammarExerciseCard({
 }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const answered = selected !== null;
-  const [before, after] = exercise.sentence.split("___");
+  const isIdentify = exercise.kind === "identify";
+  const [before, after] = isIdentify
+    ? [exercise.sentence, ""]
+    : exercise.sentence.split("___");
 
   const handleSelect = (i: number) => {
     if (answered) return;
@@ -31,7 +34,9 @@ export default function GrammarExerciseCard({
   };
 
   const handleSpeak = () => {
-    const fullSentence = exercise.sentence.replace("___", exercise.options[exercise.answer]);
+    const fullSentence = isIdentify
+      ? exercise.sentence
+      : exercise.sentence.replace("___", exercise.options[exercise.answer]);
     speak(fullSentence, "en-US");
   };
 
@@ -67,14 +72,22 @@ export default function GrammarExerciseCard({
 
       {/* Sentence */}
       <div className="mb-6">
-        <p className="text-sm text-slate-400 mb-3">Выбери правильную форму</p>
-        <div className="text-xl font-medium text-white leading-relaxed">
-          {before}
-          <span className="inline-block mx-1 px-3 py-1 rounded-lg bg-brand-500/20 text-brand-300 font-semibold">
-            {answered ? exercise.options[exercise.answer] : "…"}
-          </span>
-          {after}
-        </div>
+        <p className="text-sm text-slate-400 mb-3">
+          {isIdentify ? "Определи, какое это время" : "Выбери правильную форму"}
+        </p>
+        {isIdentify ? (
+          <div className="text-xl font-medium text-white leading-relaxed">
+            {exercise.sentence}
+          </div>
+        ) : (
+          <div className="text-xl font-medium text-white leading-relaxed">
+            {before}
+            <span className="inline-block mx-1 px-3 py-1 rounded-lg bg-brand-500/20 text-brand-300 font-semibold">
+              {answered ? exercise.options[exercise.answer] : "…"}
+            </span>
+            {after}
+          </div>
+        )}
         {exercise.hint && (
           <p className="text-sm text-amber-300/80 mt-2">💡 {exercise.hint}</p>
         )}
