@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { GrammarExercise } from "../data/grammar";
 import { speak } from "../data/storage";
 
@@ -22,13 +22,27 @@ export default function GrammarExerciseCard({
     ? [exercise.sentence, ""]
     : exercise.sentence.split("___");
 
+  // Перемешиваем варианты ответа, чтобы правильный не стоял всегда на одном месте.
+  // Пересчитывается при смене задания.
+  const { opts, correctIndex } = useMemo(() => {
+    const indices = exercise.options.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return {
+      opts: indices.map((idx) => exercise.options[idx]),
+      correctIndex: indices.indexOf(exercise.answer),
+    };
+  }, [exercise]);
+
   const handleSelect = (i: number) => {
     if (answered) return;
     setSelected(i);
   };
 
   const handleNext = () => {
-    const correct = selected === exercise.answer;
+    const correct = selected === correctIndex;
     setSelected(null);
     onAnswer(correct);
   };
@@ -36,14 +50,14 @@ export default function GrammarExerciseCard({
   const handleSpeak = () => {
     const fullSentence = isIdentify
       ? exercise.sentence
-      : exercise.sentence.replace("___", exercise.options[exercise.answer]);
+      : exercise.sentence.replace("___", opts[correctIndex]);
     speak(fullSentence, "en-US");
   };
 
   const optionStyle = (i: number) => {
     if (!answered)
       return "bg-slate-800/80 border-slate-700/50 text-white hover:bg-slate-700 active:scale-[0.98]";
-    if (i === exercise.answer)
+    if (i === correctIndex)
       return "bg-emerald-500/20 border-emerald-500 text-emerald-300";
     if (i === selected)
       return "bg-red-500/20 border-red-500 text-red-300";
@@ -83,7 +97,7 @@ export default function GrammarExerciseCard({
           <div className="text-xl font-medium text-white leading-relaxed">
             {before}
             <span className="inline-block mx-1 px-3 py-1 rounded-lg bg-brand-500/20 text-brand-300 font-semibold">
-              {answered ? exercise.options[exercise.answer] : "…"}
+              {answered ? opts[correctIndex] : "…"}
             </span>
             {after}
           </div>
@@ -108,7 +122,7 @@ export default function GrammarExerciseCard({
 
       {/* Options */}
       <div className="space-y-2 mb-4">
-        {exercise.options.map((option, i) => (
+        {opts.map((option, i) => (
           <button
             key={i}
             onClick={() => handleSelect(i)}
@@ -128,7 +142,7 @@ export default function GrammarExerciseCard({
         <div className="mt-auto">
           <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/40 mb-4">
             <p className="text-sm text-slate-300">
-              {selected === exercise.answer ? "✅ Верно! " : "❌ Не совсем. "}
+              {selected === correctIndex ? "✅ Верно! " : "❌ Не совсем. "}
               {exercise.explanation}
             </p>
           </div>

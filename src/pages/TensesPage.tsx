@@ -14,6 +14,7 @@ export default function TensesPage() {
   const [items, setItems] = useState<GrammarExercise[]>([]);
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
+  const [wrong, setWrong] = useState<GrammarExercise[]>([]);
 
   const isAllSelected = selectedTenses.includes("all");
 
@@ -40,12 +41,14 @@ export default function TensesPage() {
     setItems(shuffled.slice(0, Math.min(count, shuffled.length)));
     setCurrent(0);
     setScore(0);
+    setWrong([]);
     setView("playing");
   };
 
   const handleAnswer = (correct: boolean) => {
     const finalScore = correct ? score + 1 : score;
     if (correct) setScore(finalScore);
+    else setWrong((prev) => [...prev, items[current]]);
     const next = current + 1;
     if (next >= items.length) {
       saveGrammarResult(
@@ -202,7 +205,8 @@ export default function TensesPage() {
 
   // ---------- RESULTS ----------
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-5 pb-28 flex flex-col items-center justify-center text-center">
+    <div className="min-h-screen bg-slate-900 text-slate-100 p-5 pb-28 flex flex-col items-center text-center">
+      <div className="flex-1" />
       <div className="text-6xl mb-4">
         {percent >= 90 ? "🏆" : percent >= 70 ? "🎉" : percent >= 50 ? "👍" : "💪"}
       </div>
@@ -223,6 +227,38 @@ export default function TensesPage() {
       </div>
       <p className="text-sm text-slate-400 mb-8">{percent}% верно</p>
 
+      {wrong.length > 0 && (
+        <div className="w-full max-w-md mb-8 text-left">
+          <h3 className="text-sm font-semibold text-slate-300 mb-3">
+            Разбор ошибок ({wrong.length})
+          </h3>
+          <div className="space-y-3">
+            {wrong.map((ex, i) => {
+              const correctText = ex.options[ex.answer];
+              const tenseName =
+                tenses.find((t) => t.id === ex.tenseId)?.nameRu ?? "";
+              return (
+                <div
+                  key={i}
+                  className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/40"
+                >
+                  <p className="text-sm text-white mb-1">
+                    {ex.kind === "identify"
+                      ? ex.sentence
+                      : ex.sentence.replace("___", correctText)}
+                  </p>
+                  <p className="text-sm text-emerald-300 mb-1">
+                    ✅ {correctText}
+                    {ex.kind !== "identify" && tenseName ? ` · ${tenseName}` : ""}
+                  </p>
+                  <p className="text-xs text-slate-400">{ex.explanation}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-3 w-full max-w-xs">
         <button
           onClick={() => setView("setup")}
@@ -237,6 +273,7 @@ export default function TensesPage() {
           Ещё раз 🔄
         </button>
       </div>
+      <div className="flex-1" />
     </div>
   );
 }
