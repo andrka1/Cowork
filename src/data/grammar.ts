@@ -10,10 +10,15 @@ export interface TenseTopic {
   examples: { en: string; ru: string }[];
 }
 
+export type ExerciseKind = "fill" | "identify";
+
 export interface GrammarExercise {
   id: number;
   tenseId: string;
-  sentence: string; // contains "___" placeholder
+  // "fill" (default): выбрать правильную форму глагола в пропуск "___".
+  // "identify": определить, какое это время (варианты — названия времён).
+  kind?: ExerciseKind;
+  sentence: string; // для "fill" содержит "___"; для "identify" — целое предложение
   hint?: string; // base verb / Russian hint
   options: string[];
   answer: number; // index of correct option
@@ -169,6 +174,18 @@ export const tenses: TenseTopic[] = [
       { en: "By next year she will have graduated.", ru: "К следующему году она закончит университет." },
     ],
   },
+  {
+    id: "future-perfect-continuous",
+    name: "Future Perfect Continuous",
+    nameRu: "Будущее совершённое длительное",
+    formula: "will have been + V-ing",
+    usage: "Действие будет длиться вплоть до определённого момента в будущем (акцент на длительности).",
+    markers: "by ... for, by then, by the time, for",
+    examples: [
+      { en: "By next month I will have been working here for five years.", ru: "К следующему месяцу я проработаю здесь уже пять лет." },
+      { en: "By 6 pm they will have been driving for ten hours.", ru: "К 6 вечера они будут в пути уже десять часов." },
+    ],
+  },
 ];
 
 export const grammarExercises: GrammarExercise[] = [
@@ -219,4 +236,55 @@ export const grammarExercises: GrammarExercise[] = [
   { id: 28, tenseId: "past-continuous", sentence: "At 8 pm yesterday we ___ dinner.", hint: "have", options: ["had", "were having", "have had", "are having"], answer: 1, explanation: "Конкретный момент в прошлом → Past Continuous: were having." },
   { id: 29, tenseId: "future-simple", sentence: "Perhaps they ___ come to the party.", hint: "will?", options: ["will", "are going to", "come", "came"], answer: 0, explanation: "Неуверенность (perhaps) → will." },
   { id: 30, tenseId: "present-perfect-continuous", sentence: "How long ___ you ___ here?", hint: "wait", options: ["did / wait", "have / been waiting", "are / waiting", "do / wait"], answer: 1, explanation: "How long + длительность к настоящему → have you been waiting." },
+
+  // ===== Дополнительные задания: баланс по временам (>=4 на каждое время) =====
+  // Present Simple (+1)
+  { id: 35, tenseId: "present-simple", sentence: "My brother ___ play tennis on Sundays.", hint: "отрицание", options: ["isn't", "doesn't", "don't", "didn't"], answer: 1, explanation: "Регулярное действие, he → отрицание doesn't." },
+  // Present Continuous (+1)
+  { id: 36, tenseId: "present-continuous", sentence: "Listen! Someone ___ the piano.", hint: "play", options: ["is playing", "plays", "played", "play"], answer: 0, explanation: "Listen! → действие прямо сейчас → is playing." },
+  // Present Perfect (+1)
+  { id: 37, tenseId: "present-perfect", sentence: "We haven't seen that film ___.", hint: "маркер", options: ["ago", "yet", "now", "last week"], answer: 1, explanation: "Отрицание в Present Perfect часто с yet → haven't ... yet." },
+  // Present Perfect Continuous (+2)
+  { id: 38, tenseId: "present-perfect-continuous", sentence: "My hands are dirty because I ___ in the garden.", hint: "work", options: ["have been working", "work", "worked", "am working"], answer: 0, explanation: "Видимый результат сейчас + длительный процесс → have been + V-ing." },
+  { id: 39, tenseId: "present-perfect-continuous", sentence: "She ___ English for five years now.", hint: "learn", options: ["learns", "is learning", "has been learning", "learned"], answer: 2, explanation: "for five years + связь с настоящим → has been learning." },
+  // Past Simple (+1)
+  { id: 40, tenseId: "past-simple", sentence: "They ___ the match last night.", hint: "win", options: ["win", "won", "have won", "were winning"], answer: 1, explanation: "last night → Past Simple: win → won (неправ.)." },
+  // Past Continuous (+2)
+  { id: 41, tenseId: "past-continuous", sentence: "What ___ you ___ at 7 pm last night?", hint: "do", options: ["did / do", "were / doing", "do / do", "have / done"], answer: 1, explanation: "Конкретный момент в прошлом → was/were + V-ing: were you doing." },
+  { id: 42, tenseId: "past-continuous", sentence: "The sun ___ while we walked on the beach.", hint: "shine", options: ["shone", "was shining", "shines", "had shone"], answer: 1, explanation: "Фоновое длительное действие в прошлом → was shining." },
+  // Past Perfect (+2)
+  { id: 43, tenseId: "past-perfect", sentence: "When I arrived, the party ___ already ___.", hint: "finish", options: ["had / finished", "has / finished", "was / finishing", "did / finish"], answer: 0, explanation: "Действие завершилось раньше другого прошлого → had + V3." },
+  { id: 44, tenseId: "past-perfect", sentence: "She couldn't pay because she ___ her wallet.", hint: "forget", options: ["forgot", "had forgotten", "forgets", "was forgetting"], answer: 1, explanation: "Причина в более раннем прошлом → Past Perfect: had forgotten." },
+  // Past Perfect Continuous (+2)
+  { id: 45, tenseId: "past-perfect-continuous", sentence: "He was tired because he ___ all night.", hint: "drive", options: ["drove", "was driving", "had been driving", "has been driving"], answer: 2, explanation: "Длительность до момента в прошлом → had been + V-ing." },
+  { id: 46, tenseId: "past-perfect-continuous", sentence: "They ___ for an hour when it finally stopped raining.", hint: "walk", options: ["had been walking", "walked", "were walking", "have been walking"], answer: 0, explanation: "Действие длилось до другого прошлого → had been walking." },
+  // Future Simple (+2)
+  { id: 47, tenseId: "future-simple", sentence: "Maybe we ___ go to the beach if it's sunny.", hint: "will?", options: ["are going to", "will", "go", "are"], answer: 1, explanation: "Неуверенность (maybe) → will." },
+  { id: 48, tenseId: "future-simple", sentence: "The phone is ringing — I ___ answer it.", hint: "spontaneous", options: ["am going to", "will", "answer", "am answering"], answer: 1, explanation: "Спонтанное решение в момент речи → will." },
+  // Future going to (+2)
+  { id: 49, tenseId: "future-going-to", sentence: "I've decided: I ___ learn Italian next year.", hint: "plan", options: ["will", "am going to", "go to", "going to"], answer: 1, explanation: "Заранее принятое решение/намерение → be going to." },
+  { id: 50, tenseId: "future-going-to", sentence: "She bought paint — she ___ redecorate her room.", hint: "intention", options: ["will", "is going to", "redecorates", "is redecorating"], answer: 1, explanation: "Намерение, подтверждённое признаками → be going to." },
+  // Future Continuous (+3)
+  { id: 51, tenseId: "future-continuous", sentence: "Don't call at 8 — I ___ dinner then.", hint: "have", options: ["will have", "will be having", "have", "am having"], answer: 1, explanation: "Действие в процессе в момент будущего → will be + V-ing." },
+  { id: 52, tenseId: "future-continuous", sentence: "This time next week we ___ on a beach in Italy.", hint: "relax", options: ["will be relaxing", "will relax", "relax", "are relaxing"], answer: 0, explanation: "Длительное действие в конкретный момент будущего → will be relaxing." },
+  { id: 53, tenseId: "future-continuous", sentence: "At midnight tomorrow they ___ for the exam.", hint: "study", options: ["study", "have studied", "will be studying", "will study"], answer: 2, explanation: "Действие будет в процессе в момент будущего → will be studying." },
+  // Future Perfect (+2)
+  { id: 54, tenseId: "future-perfect", sentence: "By the time you arrive, I ___ cooking.", hint: "finish", options: ["will finish", "will have finished", "finish", "am finishing"], answer: 1, explanation: "Завершится к моменту в будущем → will have + V3." },
+  { id: 55, tenseId: "future-perfect", sentence: "They ___ the house by December.", hint: "build", options: ["will have built", "will build", "build", "are building"], answer: 0, explanation: "Действие завершится к сроку → Future Perfect: will have built." },
+  // Future Perfect Continuous (новое время, +4)
+  { id: 56, tenseId: "future-perfect-continuous", sentence: "By next year I ___ here for a decade.", hint: "work", options: ["will work", "will have been working", "will be working", "have worked"], answer: 1, explanation: "Длительность к моменту в будущем → will have been + V-ing." },
+  { id: 57, tenseId: "future-perfect-continuous", sentence: "By 6 pm they ___ for ten hours straight.", hint: "drive", options: ["will have been driving", "will drive", "will be driving", "have been driving"], answer: 0, explanation: "Акцент на длительности до будущего момента → will have been driving." },
+  { id: 58, tenseId: "future-perfect-continuous", sentence: "In May, she ___ Italian for two years.", hint: "study", options: ["will study", "will be studying", "will have been studying", "studies"], answer: 2, explanation: "Длительность к будущему моменту → will have been studying." },
+  { id: 59, tenseId: "future-perfect-continuous", sentence: "By the time the guests arrive, we ___ for hours.", hint: "cook", options: ["will have been cooking", "will cook", "cook", "will be cooking"], answer: 0, explanation: "Действие будет длиться вплоть до момента в будущем → will have been + V-ing." },
+
+  // ===== Задания «определи время» (kind: identify) =====
+  { id: 60, tenseId: "present-perfect", kind: "identify", sentence: "I have just finished my homework.", options: ["Past Simple", "Present Perfect", "Present Continuous", "Past Perfect"], answer: 1, explanation: "have + V3 (finished) + маркер just → Present Perfect." },
+  { id: 61, tenseId: "past-continuous", kind: "identify", sentence: "They were watching a film at 9 pm yesterday.", options: ["Past Continuous", "Past Simple", "Present Continuous", "Past Perfect Continuous"], answer: 0, explanation: "was/were + V-ing в конкретный момент прошлого → Past Continuous." },
+  { id: 62, tenseId: "future-perfect", kind: "identify", sentence: "By Friday they will have signed the contract.", options: ["Future Simple", "Future Continuous", "Future Perfect", "Future Perfect Continuous"], answer: 2, explanation: "will have + V3 + by Friday → Future Perfect." },
+  { id: 63, tenseId: "present-simple", kind: "identify", sentence: "The shop opens at nine every morning.", options: ["Present Continuous", "Present Simple", "Present Perfect", "Future Simple"], answer: 1, explanation: "Расписание/регулярность + V-s → Present Simple." },
+  { id: 64, tenseId: "past-perfect", kind: "identify", sentence: "She had left before the meeting started.", options: ["Past Simple", "Past Perfect", "Present Perfect", "Past Perfect Continuous"], answer: 1, explanation: "had + V3 (left), раньше другого прошлого → Past Perfect." },
+  { id: 65, tenseId: "present-perfect-continuous", kind: "identify", sentence: "I have been reading this book for a week.", options: ["Present Perfect", "Present Continuous", "Present Perfect Continuous", "Past Perfect Continuous"], answer: 2, explanation: "have been + V-ing + for a week → Present Perfect Continuous." },
+  { id: 66, tenseId: "future-continuous", kind: "identify", sentence: "This time tomorrow I will be flying to Rome.", options: ["Future Simple", "Future Continuous", "Future Perfect", "Future: going to"], answer: 1, explanation: "will be + V-ing в момент будущего → Future Continuous." },
+  { id: 67, tenseId: "future-perfect-continuous", kind: "identify", sentence: "By June she will have been teaching for ten years.", options: ["Future Perfect", "Future Continuous", "Future Perfect Continuous", "Present Perfect Continuous"], answer: 2, explanation: "will have been + V-ing + by June → Future Perfect Continuous." },
+  { id: 68, tenseId: "past-simple", kind: "identify", sentence: "We visited Rome last year.", options: ["Present Perfect", "Past Simple", "Past Continuous", "Past Perfect"], answer: 1, explanation: "V2 (visited) + last year → Past Simple." },
 ];
