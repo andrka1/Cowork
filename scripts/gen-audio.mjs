@@ -42,6 +42,7 @@ function collectWords() {
     } catch {
       continue;
     }
+    // 1) Object-literal format: en: "word" / en: 'word'
     const patterns = [/[\s,{]en\s*:\s*"([^"]*)"/g, /[\s,{]en\s*:\s*'([^']*)'/g];
     for (const re of patterns) {
       let m;
@@ -49,6 +50,15 @@ function collectWords() {
         const val = (m[1] || "").trim();
         if (val) set.add(val);
       }
+    }
+    // 2) Compact pipe format inside template strings: en|ru|category|level
+    //    (one word per line). The English headword is the first column; the
+    //    line ends with a CEFR level so we don't match unrelated pipes.
+    const pipeRe = /^\s*([A-Za-z][A-Za-z '.\-]*?)\s*\|[^|\n]+\|[^|\n]+\|(?:A1|A2|B1|B2)\s*$/gm;
+    let pm;
+    while ((pm = pipeRe.exec(content)) !== null) {
+      const val = (pm[1] || "").trim();
+      if (val) set.add(val);
     }
   }
   return Array.from(set);
