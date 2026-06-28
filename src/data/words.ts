@@ -12,6 +12,7 @@ import { musicWords, phrasalVerbWords, slangWords } from "./words-music";
 import { ieltsExtraWords } from "./words-ielts";
 import { ieltsAdvancedWords } from "./words-ielts-advanced";
 import { pack2Words } from "./words-pack2";
+import { pack3Words } from "./words-pack3";
 
 export type { Word, Category };
 export { categories };
@@ -39,4 +40,5 @@ export const words: Word[] = [
   ...ieltsExtraWords,
   ...ieltsAdvancedWords,
   ...pack2Words,
+  ...pack3Words,
 ];
